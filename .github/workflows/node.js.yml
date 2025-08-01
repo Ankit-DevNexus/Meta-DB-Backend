@@ -1,0 +1,43 @@
+# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
+name: Node.js CI/CD
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: self-hosted
+
+    strategy:
+      matrix:
+        node-version: [20.x]
+        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+    - run: npm ci
+    - run: |
+        touch .env
+        echo "PORT=${{ secrets.PORT }}" >> .env
+        echo "DASHBOARD_DB_URI=${{ secrets.DASHBOARD_DB_URI }}" >> .env
+        echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
+        echo "SESSION_SECRET_KEY=${{ secrets.SESSION_SECRET_KEY }}" >> .env
+        echo "ACCESS_TOKEN=${{ secrets.ACCESS_TOKEN }}" >> .env
+        echo "AD_ACCOUNT_ID=${{ secrets.AD_ACCOUNT_ID }}" >> .env        
+        echo "FORM_ID=${{ secrets.FORM_ID }}" >> .env
+        echo "CLIENT_URL=${{ secrets.CLIENT_URL }}" >> .env
+        echo "EMAIL_USER=${{ secrets.EMAIL_USER }}" >> .env
+        echo "EMAIL_PASS=${{ secrets.EMAIL_PASS }}" >> .env
+        echo "SMTP_HOST=${{ secrets.SMTP_HOST }}" >> .env
+        echo "SMTP_PORT=${{ secrets.SMTP_PORT }}" >> .env
+        echo "ADMIN_MAIL=${{ secrets.ADMIN_MAIL }}" >> .env
+        echo "ADMIN_MAIL2=${{ secrets.ADMIN_MAIL2 }}" >> .env
+        echo "USER_MAIL=${{ secrets.USER_MAIL }}" >> .env
+    - run: cat .env  # Optional: Check if the file contains correct values (For debugging)
