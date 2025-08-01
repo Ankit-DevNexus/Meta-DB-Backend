@@ -12,7 +12,7 @@ import webhookRoutes from './Routes/webhookRoutes.js'
 import callback from './Routes/Callback_temp.js';
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 const DASHBOARD_DB_URI = process.env.DASHBOARD_DB_URI;
 
 // Define __dirname for ES Module
