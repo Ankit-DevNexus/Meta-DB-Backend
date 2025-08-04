@@ -60,36 +60,40 @@ router.post("/webhook", async (req, res) => {
         let campaignName = null;
 
         try {
-          const leadRes = await axios.get(`https://graph.facebook.com/v19.0/${leadgen_id}?access_token=${tokenData.page_access_token}`);
+          // const leadRes = await axios.get(`https://graph.facebook.com/v19.0/${leadgen_id}?access_token=${tokenData.page_access_token}`);
+          const leadRes = await axios.get(`https://graph.facebook.com/v19.0/${leadgen_id}?fields=ad_id,form_id,field_data,created_time&access_token=${tokenData.page_access_token}`);
+
           const lead = leadRes.data;
 
-          console.log("lead data:", lead);
+          console.log("Lead fetched from Facebook:", JSON.stringify(lead, null, 2));
 
-
-          // Step 1: Try to get ad_id
-          if (lead.ad_id) {
-            const adDetails = await axios.get(`https://graph.facebook.com/v19.0/${lead.ad_id}?fields=campaign_id&access_token=${tokenData.page_access_token}`);
-            const campaignId = adDetails.data.campaign_id;
-
-            console.log("campaignId", campaignId);
-
-            // Step 2: Get campaign name
-            const campaignRes = await axios.get(`https://graph.facebook.com/v19.0/${campaignId}?fields=name&access_token=${tokenData.page_access_token}`);
-            campaignName = campaignRes.data.name;
-
-            console.log("campaignName", campaignName);
-
+          if (!lead.ad_id) {
+            console.warn("lead.ad_id is missing for lead:", leadgen_id);
+          } else {
+            console.log("Found ad_id:", lead.ad_id);
           }
+
 
           if (!lead.ad_id) {
             console.warn("No ad_id found for lead:", leadgen_id);
-          }
+          } else {
+            console.log("Found ad_id:", lead.ad_id);
 
+            const adDetails = await axios.get(`https://graph.facebook.com/v19.0/${lead.ad_id}?fields=campaign_id&access_token=${tokenData.page_access_token}`);
+            const campaignId = adDetails.data.campaign_id;
+
+            console.log("campaignId:", campaignId);
+
+            const campaignRes = await axios.get(`https://graph.facebook.com/v19.0/${campaignId}?fields=name&access_token=${tokenData.page_access_token}`);
+            campaignName = campaignRes.data.name;
+
+            console.log("campaignName:", campaignName);
+          }
 
           console.log("Full lead object:", JSON.stringify(lead, null, 2));
 
 
-          // Step 3: Save lead with campaign name
+          // Save lead with campaign name
           await MetaLeadsModel.create({
             leadgen_id,
             form_id,
