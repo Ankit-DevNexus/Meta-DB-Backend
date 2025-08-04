@@ -24,7 +24,6 @@ router.get("/facebook", (req, res) => {
 });
 
 
-// Apply middleware **before** admin routes
 // router.use('/auth', authSessionMiddleware);
 
 router.get('/forgot-password', forgotPassword);
