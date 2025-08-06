@@ -36,9 +36,9 @@ router.post('/reset-password/:token', resetPassword);
 router.post('/auth/api/signup-users', signup);
 router.post('/auth/api/signin-users', login);
 
-router.get('/auth/api/get-all-users',   authorize('admin'), getAllUsers);
-router.put('/auth/api/update-user/:id',   authorize('admin'), updateUser);
-router.delete('/auth/api/delete-user/:id',   authorize('admin'), deleteUser);
+router.get('/auth/api/get-all-users',   getAllUsers);
+router.put('/auth/api/update-user/:id',   updateUser);
+router.delete('/auth/api/delete-user/:id',   deleteUser);
 
 
 // create and get Leads
