@@ -42,7 +42,7 @@ router.delete('/auth/api/delete-user/:id',   deleteUser);
 
 
 // create and get Leads
-router.post('/auth/api/Add-leads', Authenticate,  createLead);
+router.post('/auth/api/Add-leads', Authenticate, createLead);
 router.get('/auth/api/get-all-leads', getAllLeads);
 router.post("/auth/api/upload-excel-leads", Authenticate, upload.single("file"), uploadLeadsFromExcel);
 
