@@ -36,7 +36,7 @@ router.post('/reset-password/:token', resetPassword);
 router.post('/auth/api/signup-users', signup);
 router.get('/auth/api/signin-users', login);
 
-router.get('/auth/api/get-all-users', Authenticate, getAllUsers);
+router.get('/auth/api/get-all-users', Authenticate,  authorize('admin'), getAllUsers);
 router.put('/auth/api/update-user/:id', Authenticate,  authorize('admin'), updateUser);
 router.delete('/auth/api/delete-user/:id', Authenticate,  authorize('admin'), deleteUser);
 

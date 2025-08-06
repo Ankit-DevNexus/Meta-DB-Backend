@@ -24,7 +24,6 @@ router.get("/webhook", (req, res) => {
 });
 
 router.post("/webhook", async (req, res) => {
-
   console.log("Webhook POST received:", JSON.stringify(req.body, null, 2));
 
   const body = req.body;
