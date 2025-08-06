@@ -18,6 +18,24 @@ import userModel from "../models/user.model.js";
 
 export const getUserLoginHistory = async (req, res) => {
   try {
+
+
+    // Extract and verify JWT
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ message: "Unauthorized: No token provided." });
+    }
+
+    const token = authHeader.split(" ")[1];
+    let decoded;
+    try {
+      decoded = jwt.verify(token, JWT_SECRET);
+      req.user = decoded; // Attach user data to request
+    } catch (err) {
+      return res.status(403).json({ message: "Invalid or expired token." });
+    }
+
+
     const users = await userModel.aggregate([
       {
         $project: { // Selects specific fields to return:
@@ -25,7 +43,7 @@ export const getUserLoginHistory = async (req, res) => {
           email: 1,
           role: 1,
           loginHistory: 1,
-          
+
           // Creates a new field: lastLoginAt which is the most recent date from the loginHistory.loginAt array.
           lastLoginAt: { $max: "$loginHistory.loginAt" } // Find the most recent login per user
         }

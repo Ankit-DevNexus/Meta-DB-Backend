@@ -17,55 +17,55 @@ const generateToken = (user) => {
 
 // Signup Controller
 export const signup = async (req, res) => {
-    try {
-        const { name, email, phone, password, confirmPassword, role, isActive, lastLogin } = req.body;
+  try {
+    const { name, email, phone, password, confirmPassword, role, isActive, lastLogin } = req.body;
 
-        if (password !== confirmPassword) {
-            return res.status(400).json({ message: "Passwords do not match" });
-        }
-
-        // Check for existing email/phone
-        const existingUser = await userModel.findOne({
-            $or: [
-                { email: email },
-                { phone: phone }
-            ]
-        });
-
-        if (existingUser) {
-            if (existingUser.email === email || existingUser.phone === phone) {
-                return res.status(400).json({ message: "Email or Phone number already exists" });
-            }
-        }
-
-        // Create admin
-        const newUser = new userModel({
-            name,
-            email,
-            phone,
-            password,
-            role,
-            isActive,
-            lastLogin
-        });
-
-        const savedUser = await newUser.save();
-
-        const token = generateToken(savedUser);
-
-        res.status(201).json({
-            message: "User created successfully",
-            token,
-            user: {
-                id: savedUser._id,
-                name: savedUser.name,
-                email: savedUser.email,
-                role: savedUser.role
-            }
-        });
-    } catch (err) {
-        res.status(500).json({ msg: "Server error", error: err.message });
+    if (password !== confirmPassword) {
+      return res.status(400).json({ message: "Passwords do not match" });
     }
+
+    // Check for existing email/phone
+    const existingUser = await userModel.findOne({
+      $or: [
+        { email: email },
+        { phone: phone }
+      ]
+    });
+
+    if (existingUser) {
+      if (existingUser.email === email || existingUser.phone === phone) {
+        return res.status(400).json({ message: "Email or Phone number already exists" });
+      }
+    }
+
+    // Create admin
+    const newUser = new userModel({
+      name,
+      email,
+      phone,
+      password,
+      role,
+      isActive,
+      lastLogin
+    });
+
+    const savedUser = await newUser.save();
+
+    const token = generateToken(savedUser);
+
+    res.status(201).json({
+      message: "User created successfully",
+      token,
+      user: {
+        id: savedUser._id,
+        name: savedUser.name,
+        email: savedUser.email,
+        role: savedUser.role
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ msg: "Server error", error: err.message });
+  }
 };
 
 
@@ -125,6 +125,23 @@ export const login = async (req, res) => {
 
 export const getAllUsers = async (req, res) => {
   try {
+
+    // Extract and verify JWT
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ message: "Unauthorized: No token provided." });
+    }
+
+    const token = authHeader.split(" ")[1];
+    let decoded;
+    try {
+      decoded = jwt.verify(token, JWT_SECRET);
+      req.user = decoded; // Attach user data to request
+    } catch (err) {
+      return res.status(403).json({ message: "Invalid or expired token." });
+    }
+
+    
     const users = await userModel.find().select('-password'); // Exclude password field
 
     res.status(200).json({
