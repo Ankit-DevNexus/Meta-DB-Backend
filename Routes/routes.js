@@ -34,7 +34,7 @@ router.post('/reset-password/:token', resetPassword);
 
 // sign up and login routes
 router.post('/auth/api/signup-users', signup);
-router.get('/auth/api/signin-users', login);
+router.post('/auth/api/signin-users', login);
 
 router.get('/auth/api/get-all-users', Authenticate,  authorize('admin'), getAllUsers);
 router.put('/auth/api/update-user/:id', Authenticate,  authorize('admin'), updateUser);
