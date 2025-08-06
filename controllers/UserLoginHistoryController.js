@@ -18,7 +18,6 @@ import userModel from "../models/user.model.js";
 
 export const getUserLoginHistory = async (req, res) => {
   try {
-
     const users = await userModel.aggregate([
       {
         $project: { // Selects specific fields to return:
