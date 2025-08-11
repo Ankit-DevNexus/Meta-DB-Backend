@@ -47,7 +47,7 @@ router.get('/auth/api/get-all-leads', getAllLeads);
 router.post("/auth/api/upload-excel-leads", Authenticate, upload.single("file"), uploadLeadsFromExcel);
 
 // update leads 
-router.patch("/auth/api/get-all-leads/:id",  updateLead);
+router.patch("/auth/api/get-all-leads/edit/:id",  updateLead);
 
 // get login history
 // router.get('/auth/api/user-login-history', authorize('admin'), getUserLoginHistory);

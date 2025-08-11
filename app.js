@@ -30,7 +30,9 @@ getDashboardDB(DASHBOARD_DB_URI)
 // }));
 
 const allowedOrigins = [
+  'http://localhost:5173',
   'http://localhost:5174',
+  
 ];
 
 app.use(cors({
@@ -66,7 +68,6 @@ app.use(session({
 app.get('/', (req, res)=>{
     res.send("API is runnig")
 })
-
 
 // Routes
 app.use('/', Routes);

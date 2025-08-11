@@ -9,7 +9,7 @@ const router = express.Router();
 
 // Facebook verification
 router.get("/webhook", (req, res) => {
-  const VERIFY_TOKEN = "mywebhooktoken"; // Set this same value in Meta
+  const VERIFY_TOKEN = process.env.VERIFY_TOKEN; // Set this same value in Meta
 
   const mode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];

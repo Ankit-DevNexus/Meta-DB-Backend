@@ -37,6 +37,7 @@ const leadSchema = new mongoose.Schema({
 
 
 const MetaLeadsModel = mongoose.model("MetaLeadsCollection", leadSchema);
+
 export default MetaLeadsModel;
 
 
