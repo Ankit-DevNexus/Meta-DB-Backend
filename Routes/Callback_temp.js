@@ -89,7 +89,6 @@ router.get("/facebook/callback", async (req, res) => {
     }
 
     res.redirect("/dashboard?fb_connected=1");
-    // res.send("Tokens stored and leadgen subscriptions added.");
 
   } catch (err) {
     console.error("Error in /facebook/callback:", err.response?.data || err.message);
