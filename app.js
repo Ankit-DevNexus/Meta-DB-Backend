@@ -22,7 +22,30 @@ const __dirname = path.dirname(__filename)
 // Connect to MongoDB
 getDashboardDB(DASHBOARD_DB_URI)
 
-app.use(cors()); // Enables CORS for all routes
+// app.use(cors()); // Enables CORS for all routes
+
+// app.use(cors({
+//   origin: 'http://localhost:5174', // frontend origin
+//   credentials: true               // allow cookies, authorization headers, etc.
+// }));
+
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:5174',
+  
+];
+
+app.use(cors({
+  origin: function(origin, callback) {
+    if (allowedOrigins.includes(origin) || !origin) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
+}));
+
 
 // Add this line to parse JSON bodies
 app.use(express.json()); 
@@ -45,7 +68,6 @@ app.use(session({
 app.get('/', (req, res)=>{
     res.send("API is runnig")
 })
-
 
 // Routes
 app.use('/', Routes);

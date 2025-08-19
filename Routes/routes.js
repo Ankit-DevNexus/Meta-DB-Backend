@@ -34,33 +34,33 @@ router.post('/reset-password/:token', resetPassword);
 
 // sign up and login routes
 router.post('/auth/api/signup-users', signup);
-router.get('/auth/api/signin-users', login);
+router.post('/auth/api/signin-users', login);
 
-router.get('/auth/api/get-all-users', Authenticate,  authorize('admin'), getAllUsers);
-router.put('/auth/api/update-user/:id', Authenticate,  authorize('admin'), updateUser);
-router.delete('/auth/api/delete-user/:id', Authenticate,  authorize('admin'), deleteUser);
+router.get('/auth/api/get-all-users',   getAllUsers);
+router.put('/auth/api/update-user/:id',   updateUser);
+router.delete('/auth/api/delete-user/:id',   deleteUser);
 
 
 // create and get Leads
-router.post('/auth/api/Add-leads', Authenticate,  createLead);
-router.get('/auth/api/get-all-leads', Authenticate, getAllLeads);
-router.post("/auth/api/upload-excel-leads", Authenticate,  upload.single("file"), uploadLeadsFromExcel);
+router.post('/auth/api/Add-leads', Authenticate, createLead);
+router.get('/auth/api/get-all-leads', getAllLeads);
+router.post("/auth/api/upload-excel-leads", Authenticate, upload.single("file"), uploadLeadsFromExcel);
 
 // update leads 
-router.patch("/auth/api/get-all-leads/:id",  updateLead);
+router.patch("/auth/api/get-all-leads/edit/:id",  updateLead);
 
 // get login history
 // router.get('/auth/api/user-login-history', authorize('admin'), getUserLoginHistory);
-router.get('/auth/api/user-login-history', Authenticate,  getUserLoginHistory);
+router.get('/auth/api/user-login-history', getUserLoginHistory);
 
-router.get('/auth/api/meta-ads/fetch-meta-leads',  fetchAndSaveNewLeads);
+router.get('/auth/api/meta-ads/fetch-meta-leads', fetchAndSaveNewLeads);
 
-router.get('/auth/api/meta-ads/all-leads',  getAllLeadsFromDB);
+router.get('/auth/api/meta-ads/all-leads', getAllLeadsFromDB);
 
-router.get('/auth/api/meta-ads/insights',  getAdsInsights);
+router.get('/auth/api/meta-ads/insights', getAdsInsights);
 
 router.get('/auth/api/contact', getAllContactSubmissions);
 
-router.post('/auth/api/contact',  contactus);
+router.post('/auth/api/contact', contactus);
 
 export default router;

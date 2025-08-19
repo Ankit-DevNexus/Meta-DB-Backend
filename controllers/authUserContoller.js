@@ -124,24 +124,7 @@ export const login = async (req, res) => {
 
 
 export const getAllUsers = async (req, res) => {
-  try {
-
-    // Extract and verify JWT
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ message: "Unauthorized: No token provided." });
-    }
-
-    const token = authHeader.split(" ")[1];
-    let decoded;
-    try {
-      decoded = jwt.verify(token, JWT_SECRET);
-      req.user = decoded; // Attach user data to request
-    } catch (err) {
-      return res.status(403).json({ message: "Invalid or expired token." });
-    }
-
-    
+  try {    
     const users = await userModel.find().select('-password'); // Exclude password field
 
     res.status(200).json({
