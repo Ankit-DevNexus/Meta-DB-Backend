@@ -13,15 +13,15 @@ const router = express.Router();
 router.get('/dashboard', DashboardController);
 
 
-const clientId = process.env.APP_ID;
-const redirectUri = process.env.REDIRECT_URI;
+// const clientId = process.env.APP_ID;
+// const redirectUri = process.env.REDIRECT_URI;
 
-router.get("/facebook", (req, res) => {
-    // const facebookAuthUrl = `https://www.facebook.com/v19.0/dialog/oauth?client_id=${APP_ID}&redirect_uri=${REDIRECT_URI}&scope=pages_show_list,leads_retrieval,ads_management&response_type=code`;
+// router.get("/facebook", (req, res) => {
+//     // const facebookAuthUrl = `https://www.facebook.com/v19.0/dialog/oauth?client_id=${APP_ID}&redirect_uri=${REDIRECT_URI}&scope=pages_show_list,leads_retrieval,ads_management&response_type=code`;
 
-  const fbLoginUrl = `https://www.facebook.com/v19.0/dialog/oauth?client_id=${clientId}&redirect_uri=${redirectUri}&scope=pages_show_list,ads_management,leads_retrieval`;
-  res.redirect(fbLoginUrl);
-});
+//   const fbLoginUrl = `https://www.facebook.com/v19.0/dialog/oauth?client_id=${clientId}&redirect_uri=${redirectUri}&scope=pages_show_list,ads_management,leads_retrieval`;
+//   res.redirect(fbLoginUrl);
+// });
 
 
 // router.use('/auth', authSessionMiddleware);

@@ -99,6 +99,7 @@ router.post("/webhook", async (req, res) => {
             page_id: pageId,
             campaign_name: campaignName,
             field_data: lead.field_data,
+            crm_user_id: tokenData.crm_user_id,  // <-- attach to correct user
             assignedTo: null,
             assignedDate: null,
             status: 'new',

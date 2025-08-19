@@ -65,7 +65,7 @@ router.get("/facebook/callback", async (req, res) => {
     for (const page of pages) {
 
       await TokenModel.create({
-        crm_user_id: req.user._id, // <-- assume you have authentication middleware
+        crm_user_id: req.user.id, // <-- assume you have authentication middleware
         page_id: page.id,
         page_name: page.name,
         page_access_token: page.access_token,
