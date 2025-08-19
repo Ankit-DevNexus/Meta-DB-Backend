@@ -10,7 +10,7 @@ import { forgotPassword, resetPassword } from '../controllers/ForgetPasswordCont
 
 const router = express.Router();
 
-// router.get('/', DashboardController);
+router.get('/dashboard', DashboardController);
 
 
 const clientId = process.env.APP_ID;

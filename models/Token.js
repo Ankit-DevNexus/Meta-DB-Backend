@@ -2,6 +2,7 @@
 import mongoose from "mongoose";
 
 const TokenSchema = new mongoose.Schema({
+  crm_user_id: String,
   page_id: String,
   page_name: String,
   page_access_token: String,

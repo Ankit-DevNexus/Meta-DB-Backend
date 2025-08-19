@@ -1,5 +1,5 @@
 const DashboardController = (req, res) =>{
-    res.render('Dashboard')
+    res.render('dashboard')
 } 
 
 export { DashboardController }

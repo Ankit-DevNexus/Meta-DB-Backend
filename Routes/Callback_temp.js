@@ -11,15 +11,23 @@ const APP_ID = process.env.APP_ID;
 const APP_SECRET = process.env.APP_SECRET;
 const REDIRECT_URI = process.env.REDIRECT_URI;
 
+
+// 1. Start login
+router.get("/facebook/connect", (req, res) => {
+  const authUrl = `https://www.facebook.com/v19.0/dialog/oauth?client_id=${APP_ID}&redirect_uri=${REDIRECT_URI}&scope=pages_show_list,leads_retrieval,ads_read,pages_read_engagement`;
+  res.redirect(authUrl);
+});
+
+// 2. Callback after login
 router.get("/facebook/callback", async (req, res) => {
   try {
     const code = req.query.code;
     if (!code) return res.status(400).send("Missing code parameter");
 
-    console.log("code:", code);
-    console.log("APP_ID:", APP_ID);
-    console.log("APP_SECRET:", APP_SECRET ? "present" : "missing");
-    console.log("REDIRECT_URI:", REDIRECT_URI);
+    // console.log("code:", code);
+    // console.log("APP_ID:", APP_ID);
+    // console.log("APP_SECRET:", APP_SECRET ? "present" : "missing");
+    // console.log("REDIRECT_URI:", REDIRECT_URI);
 
     // Step 1: Exchange code for short-lived access token
     const shortTokenRes = await axios.get("https://graph.facebook.com/v19.0/oauth/access_token", {
@@ -57,6 +65,7 @@ router.get("/facebook/callback", async (req, res) => {
     for (const page of pages) {
       // Save page and user tokens to DB
       await TokenModel.create({
+        crm_user_id: req.user._id, // <-- assume you have authentication middleware
         page_id: page.id,
         page_name: page.name,
         page_access_token: page.access_token,
@@ -79,7 +88,8 @@ router.get("/facebook/callback", async (req, res) => {
       }
     }
 
-    res.send("Tokens stored and leadgen subscriptions added.");
+    res.redirect("/dashboard?fb_connected=1");
+    // res.send("Tokens stored and leadgen subscriptions added.");
 
   } catch (err) {
     console.error("Error in /facebook/callback:", err.response?.data || err.message);
