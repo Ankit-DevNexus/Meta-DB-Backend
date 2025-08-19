@@ -63,7 +63,7 @@ router.get("/facebook/callback", async (req, res) => {
 
     // Step 4: Store and subscribe each page
     for (const page of pages) {
-      // Save page and user tokens to DB
+
       await TokenModel.create({
         crm_user_id: req.user._id, // <-- assume you have authentication middleware
         page_id: page.id,
