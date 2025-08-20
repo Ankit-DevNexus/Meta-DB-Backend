@@ -26,6 +26,18 @@ router.get("/facebook/connect", (req, res) => {
   res.redirect(authUrl);
 });
 
+// Add this to your backend routes
+router.get("/facebook/config", (req, res) => {
+  try {
+    res.json({
+      appId: process.env.APP_ID,
+      redirectUri: process.env.REDIRECT_URI
+    });
+  } catch (error) {
+    console.error("Error getting Facebook config:", error);
+    res.status(500).json({ error: "Unable to get Facebook configuration" });
+  }
+});
 
 // Add this to your backend routes
 router.get("/facebook/status", Authenticate, async (req, res) => {
@@ -33,6 +45,8 @@ router.get("/facebook/status", Authenticate, async (req, res) => {
     // Check if user has a valid token in database
     const token = await TokenModel.findOne({ crm_user_id: req.user.id });
     
+    const authUrl = `https://www.facebook.com/v19.0/dialog/oauth?client_id=${APP_ID}&redirect_uri=${REDIRECT_URI}&scope=pages_show_list,leads_retrieval,ads_read,pages_read_engagement`;
+  res.redirect(authUrl);
     if (token) {
       // Optionally verify the token is still valid with Facebook API
       res.json({ connected: true });
@@ -116,6 +130,8 @@ router.get("/facebook/callback", async (req, res) => {
   }
 });
 
+export default router;
+
 // // 2. Callback after login
 // router.get("/facebook/callback", async (req, res) => {
 //   try {
@@ -194,7 +210,6 @@ router.get("/facebook/callback", async (req, res) => {
 //   }
 // });
 
-export default router;
 
 
 
