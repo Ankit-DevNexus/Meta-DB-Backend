@@ -7,10 +7,10 @@ import { Authenticate, authorize } from '../middleware/authMiddleware.js';
 import { getUserLoginHistory } from '../controllers/UserLoginHistoryController.js';
 import { contactus, getAllContactSubmissions } from '../controllers/ContactUsLeadsController.js';
 import { forgotPassword, resetPassword } from '../controllers/ForgetPasswordController.js';
+import { SignInController } from '../controllers/SignInController.js';
 
 const router = express.Router();
 
-router.get('/dashboard', DashboardController);
 
 
 // const clientId = process.env.APP_ID;
@@ -24,7 +24,10 @@ router.get('/dashboard', DashboardController);
 // });
 
 
-// router.use('/auth', authSessionMiddleware);
+router.get('/', SignInController);
+router.post('/', SignInController);
+
+router.get('/dashboard', DashboardController);
 
 router.get('/forgot-password', forgotPassword);
 router.post('/forgot-password', forgotPassword);

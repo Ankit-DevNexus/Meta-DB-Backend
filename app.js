@@ -32,6 +32,7 @@ getDashboardDB(DASHBOARD_DB_URI)
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:5174',
+  'http://localhost:3001',
   
 ];
 
@@ -49,6 +50,8 @@ app.use(cors({
 
 // Add this line to parse JSON bodies
 app.use(express.json()); 
+app.use(express.urlencoded({ extended: true }));
+
 
 //view engine 
 app.set('view engine', 'ejs');
@@ -65,9 +68,9 @@ app.use(session({
   cookie: { secure: false } // set to true if using HTTPS
 }));
 
-app.get('/', (req, res)=>{
-    res.send("API is runnig")
-})
+// app.get('/', (req, res)=>{
+//     res.send("API is runnig")
+// })
 
 // Routes
 app.use('/', Routes);
