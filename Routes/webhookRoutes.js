@@ -123,9 +123,7 @@ router.post("/webhook", async (req, res) => {
 // Get leads for authenticated user only
 router.get("/user/leads", Authenticate, async (req, res) => {
   try {
-    const leads = await MetaLeadsModel.find({ 
-      user_id: req.user.id 
-    }).sort({ createdAt: -1 });
+    const leads = await MetaLeadsModel.find({ crm_user_id: req.user.id }).sort({ createdAt: -1 });
 
     return res.status(200).json({
       message: "Leads fetched successfully",
@@ -156,46 +154,46 @@ router.get("/user/facebook-status", Authenticate, async (req, res) => {
   }
 });
 
-router.get("/all-leads-via-webhook", async (req, res) => {
-  try {
-    const leads = await MetaLeadsModel.find().sort({ created_time: -1 }); // newest first
+// router.get("/all-leads-via-webhook", async (req, res) => {
+//   try {
+//     const leads = await MetaLeadsModel.find().sort({ created_time: -1 }); // newest first
 
-    return res.status(200).json({
-      message: "Leads fetched successfully",
-      totalLeads: leads.length,
-      leads: leads
-    });
-  } catch (err) {
-    res.status(500).json({ error: "Failed to fetch leads" });
-  }
-});
+//     return res.status(200).json({
+//       message: "Leads fetched successfully",
+//       totalLeads: leads.length,
+//       leads: leads
+//     });
+//   } catch (err) {
+//     res.status(500).json({ error: "Failed to fetch leads" });
+//   }
+// });
 
 
 // Update lead by ID
-router.patch("/all-leads-via-webhook/:id", async (req, res) => {
-  const leadId = req.params.id;
-  const updateFields = req.body;
+// router.patch("/all-leads-via-webhook/:id", async (req, res) => {
+//   const leadId = req.params.id;
+//   const updateFields = req.body;
 
-  try {
-    const updatedLead = await MetaLeadsModel.findByIdAndUpdate(
-      leadId,
-      { $set: updateFields },
-      { new: true } // return the updated document
-    );
+//   try {
+//     const updatedLead = await MetaLeadsModel.findByIdAndUpdate(
+//       leadId,
+//       { $set: updateFields },
+//       { new: true } // return the updated document
+//     );
 
-    if (!updatedLead) {
-      return res.status(404).json({ message: "Lead not found" });
-    }
+//     if (!updatedLead) {
+//       return res.status(404).json({ message: "Lead not found" });
+//     }
 
-    return res.status(200).json({
-      message: "Lead updated successfully",
-      lead: updatedLead
-    });
-  } catch (err) {
-    console.error("Error updating lead:", err.message);
-    return res.status(500).json({ error: "Failed to update lead" });
-  }
-});
+//     return res.status(200).json({
+//       message: "Lead updated successfully",
+//       lead: updatedLead
+//     });
+//   } catch (err) {
+//     console.error("Error updating lead:", err.message);
+//     return res.status(500).json({ error: "Failed to update lead" });
+//   }
+// });
 
 
 export default router;

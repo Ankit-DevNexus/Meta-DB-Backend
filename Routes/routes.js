@@ -23,7 +23,7 @@ const router = express.Router();
 //   res.redirect(fbLoginUrl);
 // });
 
-
+//  for ejs login
 router.get('/', SignInController);
 router.post('/', SignInController);
 
