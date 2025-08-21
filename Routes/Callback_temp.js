@@ -5,6 +5,7 @@ import express from "express";
 import axios from "axios";
 import TokenModel from "../models/Token.js";
 import { Authenticate } from '../middleware/authMiddleware.js';
+import userModel from '../models/user.model.js';
 
 const router = express.Router();
 
