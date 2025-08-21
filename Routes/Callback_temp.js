@@ -14,17 +14,17 @@ const REDIRECT_URI = process.env.REDIRECT_URI;
 
 
 // 1. Start login
-// router.get("/facebook/connect",  (req, res) => {
-//   // req.user is available here because user is logged into your CRM
-//   const state = req.user.id.toString(); // store crm user id in state
-//   const authUrl = `https://www.facebook.com/v19.0/dialog/oauth?client_id=${APP_ID}&redirect_uri=${REDIRECT_URI}&scope=pages_show_list,leads_retrieval,ads_read_engagement&state=${state}`;
-//   res.redirect(authUrl);
-// });
-
-router.get("/facebook/connect", (req, res) => {
-  const authUrl = `https://www.facebook.com/v19.0/dialog/oauth?client_id=${APP_ID}&redirect_uri=${REDIRECT_URI}&scope=pages_show_list,leads_retrieval,ads_read,pages_read_engagement`;
+router.get("/facebook/connect",  (req, res) => {
+  // req.user is available here because user is logged into your CRM
+  const state = req.user.id.toString(); // store crm user id in state
+  const authUrl = `https://www.facebook.com/v19.0/dialog/oauth?client_id=${APP_ID}&redirect_uri=${REDIRECT_URI}&scope=pages_show_list,leads_retrieval,ads_read_engagement&state=${state}`;
   res.redirect(authUrl);
 });
+
+// router.get("/facebook/connect", (req, res) => {
+//   const authUrl = `https://www.facebook.com/v19.0/dialog/oauth?client_id=${APP_ID}&redirect_uri=${REDIRECT_URI}&scope=pages_show_list,leads_retrieval,ads_read,pages_read_engagement`;
+//   res.redirect(authUrl);
+// });
 
 // Add this to your backend routes
 router.get("/facebook/config", (req, res) => {
@@ -44,9 +44,6 @@ router.get("/facebook/status", Authenticate, async (req, res) => {
   try {
     // Check if user has a valid token in database
     const token = await TokenModel.findOne({ crm_user_id: req.user.id });
-    
-    const authUrl = `https://www.facebook.com/v19.0/dialog/oauth?client_id=${APP_ID}&redirect_uri=${REDIRECT_URI}&scope=pages_show_list,leads_retrieval,ads_read,pages_read_engagement`;
-  res.redirect(authUrl);
     if (token) {
       // Optionally verify the token is still valid with Facebook API
       res.json({ connected: true });
@@ -58,6 +55,7 @@ router.get("/facebook/status", Authenticate, async (req, res) => {
     res.status(500).json({ error: "Unable to check connection status" });
   }
 });
+
 
 // 2. Callback after login
 router.get("/facebook/callback", async (req, res) => {
@@ -123,7 +121,10 @@ router.get("/facebook/callback", async (req, res) => {
       }
     }
 
-    res.redirect("/dashboard?fb_connected=1");
+    // res.redirect("/dashboard?fb_connected=1");
+     // Redirect to the correct frontend URL instead of /dashboard
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+    res.redirect(`${frontendUrl}/admin-dashboard?fb_connected=1`);
   } catch (err) {
     console.error("Error in /facebook/callback:", err.response?.data || err.message);
     res.status(500).send("Something went wrong during token processing.");
