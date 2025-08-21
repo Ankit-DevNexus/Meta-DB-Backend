@@ -154,19 +154,19 @@ router.get("/user/facebook-status", Authenticate, async (req, res) => {
   }
 });
 
-// router.get("/all-leads-via-webhook", async (req, res) => {
-//   try {
-//     const leads = await MetaLeadsModel.find().sort({ created_time: -1 }); // newest first
+router.get("/all-leads-via-webhook", async (req, res) => {
+  try {
+    const leads = await MetaLeadsModel.find().sort({ created_time: -1 }); // newest first
 
-//     return res.status(200).json({
-//       message: "Leads fetched successfully",
-//       totalLeads: leads.length,
-//       leads: leads
-//     });
-//   } catch (err) {
-//     res.status(500).json({ error: "Failed to fetch leads" });
-//   }
-// });
+    return res.status(200).json({
+      message: "Leads fetched successfully",
+      totalLeads: leads.length,
+      leads: leads
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch leads" });
+  }
+});
 
 
 // Update lead by ID
