@@ -1,3 +1,5 @@
+
+// controllers/authUserController.js
 import jwt from "jsonwebtoken";
 import userModel from "../models/user.model.js";
 
@@ -106,25 +108,27 @@ export const login = async (req, res) => {
 
     const token = generateToken(user);
 
+    // In your login controller - add this
     res.status(200).json({
       message: "Login successful",
       token,
       user: {
-        id: user._id,
+        id: user._id, // Make sure this is included
         name: user.name,
+        email: user.email,
         role: user.role,
         lastLogin: user.lastLogin
       }
     });
+
   } catch (err) {
     res.status(500).json({ msg: "Server error", error: err.message });
   }
 };
 
 
-
 export const getAllUsers = async (req, res) => {
-  try {    
+  try {
     const users = await userModel.find().select('-password'); // Exclude password field
 
     res.status(200).json({

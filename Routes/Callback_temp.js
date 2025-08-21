@@ -63,6 +63,12 @@ router.get("/facebook/callback", async (req, res) => {
     const { code, state } = req.query; // state = crm_user_id
     if (!code) return res.status(400).send("Missing code parameter");
 
+     // Get user info from database
+    const user = await userModel.findById(state);
+    if (!user) {
+      return res.status(404).send("User not found");
+    }
+
     // Step 1: Exchange code for short-lived token
     const shortTokenRes = await axios.get("https://graph.facebook.com/v19.0/oauth/access_token", {
       params: {
@@ -90,6 +96,10 @@ router.get("/facebook/callback", async (req, res) => {
     // Step 3: Get managed pages
     const pageRes = await axios.get(`https://graph.facebook.com/v19.0/me/accounts?access_token=${longToken}`);
     const pages = pageRes.data.data || [];
+
+    // Delete existing tokens for this user to avoid duplicates
+    await TokenModel.deleteMany({ crm_user_id: state });
+
 
     for (const page of pages) {
       await TokenModel.create({

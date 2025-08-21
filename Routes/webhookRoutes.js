@@ -1,7 +1,10 @@
+
+//Routes/webhookRoutes.js
 import express from 'express';
 import axios from 'axios';
 import MetaLeadsModel from "../models/MetaLeadsModel.js";
 import TokenModel from "../models/Token.js";
+import { Authenticate } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 // const VERIFY_TOKEN = process.env.VERIFY_TOKEN || "mywebhooktoken";
@@ -23,9 +26,10 @@ router.get("/webhook", (req, res) => {
   }
 });
 
+// Routes/webhookRoutes.js - UPDATED
 router.post("/webhook", async (req, res) => {
-  console.log("Webhook POST received:", JSON.stringify(req.body, null, 2));
 
+  console.log("Webhook POST received:", JSON.stringify(req.body, null, 2));
   const body = req.body;
 
   if (body.object === "page") {
@@ -53,53 +57,49 @@ router.post("/webhook", async (req, res) => {
           continue;
         }
 
+        // Check if lead already exists for this user
+        const existingLead = await MetaLeadsModel.findOne({ 
+          leadgen_id, 
+          user_id: tokenData.crm_user_id 
+        });
+        
+        if (existingLead) {
+          console.log("Lead already exists for user:", tokenData.user_email);
+          continue;
+        }
+
         const url = `https://graph.facebook.com/v19.0/${leadgen_id}?access_token=${tokenData.page_access_token}`;
         console.log("Fetching lead from:", url);
 
         let campaignName = null;
 
         try {
-          // const leadRes = await axios.get(`https://graph.facebook.com/v19.0/${leadgen_id}?access_token=${tokenData.page_access_token}`);
           const leadRes = await axios.get(`https://graph.facebook.com/v19.0/${leadgen_id}?fields=ad_id,form_id,field_data,created_time&access_token=${tokenData.page_access_token}`);
-
           const lead = leadRes.data;
 
           console.log("Lead fetched from Facebook:", JSON.stringify(lead, null, 2));
 
-          if (!lead.ad_id) {
-            console.warn("lead.ad_id is missing for lead:", leadgen_id);
-          } else {
-            console.log("Found ad_id:", lead.ad_id);
+          if (lead.ad_id) {
+            try {
+              const adDetails = await axios.get(`https://graph.facebook.com/v19.0/${lead.ad_id}?fields=campaign_id&access_token=${tokenData.page_access_token}`);
+              const campaignId = adDetails.data.campaign_id;
+
+              const campaignRes = await axios.get(`https://graph.facebook.com/v19.0/${campaignId}?fields=name&access_token=${tokenData.page_access_token}`);
+              campaignName = campaignRes.data.name;
+            } catch (campaignErr) {
+              console.error("Error fetching campaign details:", campaignErr.message);
+            }
           }
 
-
-          if (!lead.ad_id) {
-            console.warn("No ad_id found for lead:", leadgen_id);
-          } else {
-            console.log("Found ad_id:", lead.ad_id);
-
-            const adDetails = await axios.get(`https://graph.facebook.com/v19.0/${lead.ad_id}?fields=campaign_id&access_token=${tokenData.page_access_token}`);
-            const campaignId = adDetails.data.campaign_id;
-
-            console.log("campaignId:", campaignId);
-
-            const campaignRes = await axios.get(`https://graph.facebook.com/v19.0/${campaignId}?fields=name&access_token=${tokenData.page_access_token}`);
-            campaignName = campaignRes.data.name;
-
-            console.log("campaignName:", campaignName);
-          }
-
-          console.log("Full lead object:", JSON.stringify(lead, null, 2));
-
-
-          // Save lead with campaign name
+          // Save lead with user association
           await MetaLeadsModel.create({
             leadgen_id,
             form_id,
             page_id: pageId,
             campaign_name: campaignName,
             field_data: lead.field_data,
-            crm_user_id: tokenData.crm_user_id,  // <-- attach to correct user
+            user_id: tokenData.crm_user_id,  // Associate with user
+            user_email: tokenData.user_email, // Store user email
             assignedTo: null,
             assignedDate: null,
             status: 'new',
@@ -107,13 +107,9 @@ router.post("/webhook", async (req, res) => {
             remarks2: '',
           });
 
-          console.log("New lead saved");
+          console.log(`New lead saved for user: ${tokenData.user_email}`);
         } catch (err) {
-          console.error("Error fetching lead data:", {
-            message: err.message,
-            status: err.response?.status,
-            data: err.response?.data,
-          });
+          console.error("Error fetching lead data:", err.message);
         }
       }
     }
@@ -121,6 +117,42 @@ router.post("/webhook", async (req, res) => {
     return res.status(200).send("EVENT_RECEIVED");
   } else {
     return res.sendStatus(404);
+  }
+});
+
+// Get leads for authenticated user only
+router.get("/user/leads", Authenticate, async (req, res) => {
+  try {
+    const leads = await MetaLeadsModel.find({ 
+      user_id: req.user.id 
+    }).sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      message: "Leads fetched successfully",
+      totalLeads: leads.length,
+      leads: leads
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch leads" });
+  }
+});
+
+// Get Facebook connection status for authenticated user
+router.get("/user/facebook-status", Authenticate, async (req, res) => {
+  try {
+    const token = await TokenModel.findOne({ crm_user_id: req.user.id });
+    
+    if (token) {
+      res.json({ 
+        connected: true,
+        pages: await TokenModel.find({ crm_user_id: req.user.id }, 'page_name page_id')
+      });
+    } else {
+      res.json({ connected: false });
+    }
+  } catch (error) {
+    console.error("Error checking Facebook status:", error);
+    res.status(500).json({ error: "Unable to check connection status" });
   }
 });
 

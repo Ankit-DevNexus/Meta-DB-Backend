@@ -1,3 +1,4 @@
+// models/MetaLeadsModel.js - UPDATED
 import mongoose from "mongoose";
 
 const leadSchema = new mongoose.Schema({
@@ -13,6 +14,16 @@ const leadSchema = new mongoose.Schema({
   campaign_name: {
     type: String
   },
+  // Proper user association
+  user_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  user_email: {
+    type: String,
+    required: true
+  },
   assignedTo: {
     type: String,
     default: null
@@ -22,7 +33,8 @@ const leadSchema = new mongoose.Schema({
     default: null
   },
   status: {
-    type: String
+    type: String,
+    default: 'new'
   },
   remarks1: {
     type: String
@@ -32,14 +44,8 @@ const leadSchema = new mongoose.Schema({
   },
   field_data: Array,
 }, {
-  timestamps: true, // adds createdAt and updatedAt
+  timestamps: true,
 });
 
-
 const MetaLeadsModel = mongoose.model("MetaLeadsCollection", leadSchema);
-
 export default MetaLeadsModel;
-
-
-
-
