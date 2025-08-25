@@ -1,6 +1,15 @@
 import mongoose from "mongoose";
 
 const leadSchema = new mongoose.Schema({
+  user_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  user_email: {
+    type: String,
+    required: true
+  },
   date: {
     type: Date,
     default: Date.now
@@ -23,12 +32,12 @@ const leadSchema = new mongoose.Schema({
   requirement: {
     type: String
   },
-  assignedTo:{
-    type:String,
+  assignedTo: {
+    type: String,
     default: null
   },
-  assignedDate:{
-    type:Date,
+  assignedDate: {
+    type: Date,
     default: null
   },
   status: {

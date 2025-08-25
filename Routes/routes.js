@@ -67,3 +67,6 @@ router.get('/auth/api/contact', getAllContactSubmissions);
 router.post('/auth/api/contact', contactus);
 
 export default router;
+
+
+

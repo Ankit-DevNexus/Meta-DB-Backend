@@ -27,7 +27,7 @@ router.get("/facebook/connect", Authenticate, (req, res) => {
 //   res.redirect(authUrl);
 // });
 
-// Add this to your backend routes
+
 router.get("/facebook/config", (req, res) => {
   try {
     res.json({
@@ -40,7 +40,6 @@ router.get("/facebook/config", (req, res) => {
   }
 });
 
-// Add this to your backend routes
 router.get("/facebook/status", Authenticate, async (req, res) => {
   try {
     // Check if user has a valid token in database
