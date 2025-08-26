@@ -7,11 +7,12 @@ const leadSchema = new mongoose.Schema({
   page_id: String,  
   campaign_name: String,
   field_data: Array,
-  adminId: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // 🔑 link lead to Admin
+  adminId: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // link lead to Admin
   user_email: String,
   assignedTo: { type: String, default: null },
   assignedDate: { type: Date, default: null },
   status: { type: String, default: 'new' },
+  tags: [String],
   remarks1:  String,
   remarks2: String,
 }, {

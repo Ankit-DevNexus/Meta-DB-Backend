@@ -132,6 +132,7 @@ router.post("/webhook", async (req, res) => {
               assignedTo: null,
               assignedDate: null,
               status: 'new',
+              tags: '',
               remarks1: '',
               remarks2: '',
             });

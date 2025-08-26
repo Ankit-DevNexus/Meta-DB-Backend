@@ -28,6 +28,7 @@ router.get("/facebook/connect", Authenticate, (req, res) => {
 // });
 
 
+// To get the necessary appId and redirectUri to initialize the Facebook Login SDK on the frontend.
 router.get("/facebook/config", (req, res) => {
   try {
     res.json({

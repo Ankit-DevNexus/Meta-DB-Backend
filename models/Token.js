@@ -12,7 +12,6 @@ const TokenSchema = new mongoose.Schema({
   page_access_token: String,
   user_access_token: String,
   token_created_at: Date,
-  // Add user email for easier reference
   user_email: String
 });
 

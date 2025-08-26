@@ -29,23 +29,20 @@ getDashboardDB(DASHBOARD_DB_URI)
 //   credentials: true               // allow cookies, authorization headers, etc.
 // }));
 
-const allowedOrigins = [
-  'http://localhost:5173',
-  'http://localhost:5174',
-  'http://localhost:3001',
-  
-];
 
 app.use(cors({
-  origin: function(origin, callback) {
-    if (allowedOrigins.includes(origin) || !origin) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
+  origin: "*",   // Allow all origins
+  credentials: false  // Must be false when origin is "*"
+}));
+
+
+app.use(cors({
+  origin: (origin, callback) => {
+    callback(null, true);  // allow all origins
   },
   credentials: true
 }));
+
 
 
 // Add this line to parse JSON bodies
