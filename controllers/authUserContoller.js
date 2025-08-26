@@ -1,13 +1,18 @@
+
+// controllers/authUserController.js
 import jwt from "jsonwebtoken";
 import userModel from "../models/user.model.js";
 
 // Generate JWT
 const generateToken = (user) => {
+      //  console.log("id: user._id, email: user.email,name: user.name, role: user.role",id, email, name, role);
+
   return jwt.sign(
     {
       id: user._id,
-      role: user.role,
-      name: user.name  // include name here
+      email: user.email,
+      name: user.name,
+      role: user.role
     },
     process.env.JWT_SECRET,
     { expiresIn: "1h" }
@@ -16,9 +21,10 @@ const generateToken = (user) => {
 
 
 // Signup Controller
+// Signup Controller
 export const signup = async (req, res) => {
   try {
-    const { name, email, phone, password, confirmPassword, role, isActive, lastLogin } = req.body;
+    const { name, email, phone, password, confirmPassword, role, isActive, lastLogin, adminId } = req.body;
 
     if (password !== confirmPassword) {
       return res.status(400).json({ message: "Passwords do not match" });
@@ -33,12 +39,23 @@ export const signup = async (req, res) => {
     });
 
     if (existingUser) {
-      if (existingUser.email === email || existingUser.phone === phone) {
-        return res.status(400).json({ message: "Email or Phone number already exists" });
+      return res.status(400).json({ message: "Email or Phone number already exists" });
+    }
+
+    // Decide adminId
+    let assignedAdminId = null;
+    if (role === "admin") {
+      // Admin’s own id (we’ll assign it after save)
+      assignedAdminId = null;
+    } else {
+      // For normal users, adminId must come from req.user (logged in admin)
+      assignedAdminId = adminId || req.user?._id;
+      if (!assignedAdminId) {
+        return res.status(400).json({ message: "Admin ID is required for user signup" });
       }
     }
 
-    // Create admin
+    // Create user
     const newUser = new userModel({
       name,
       email,
@@ -46,10 +63,17 @@ export const signup = async (req, res) => {
       password,
       role,
       isActive,
-      lastLogin
+      lastLogin,
+      adminId: assignedAdminId
     });
 
     const savedUser = await newUser.save();
+
+    // If it's an admin, set their own adminId = their id
+    if (role === "admin" && !savedUser.adminId) {
+      savedUser.adminId = savedUser._id;
+      await savedUser.save();
+    }
 
     const token = generateToken(savedUser);
 
@@ -60,13 +84,15 @@ export const signup = async (req, res) => {
         id: savedUser._id,
         name: savedUser.name,
         email: savedUser.email,
-        role: savedUser.role
+        role: savedUser.role,
+        adminId: savedUser.adminId
       }
     });
   } catch (err) {
     res.status(500).json({ msg: "Server error", error: err.message });
   }
 };
+
 
 
 // Login Controller
@@ -106,25 +132,21 @@ export const login = async (req, res) => {
 
     const token = generateToken(user);
 
+    // In your login controller
     res.status(200).json({
       message: "Login successful",
       token,
-      user: {
-        id: user._id,
-        name: user.name,
-        role: user.role,
-        lastLogin: user.lastLogin
-      }
+      user
     });
+
   } catch (err) {
     res.status(500).json({ msg: "Server error", error: err.message });
   }
 };
 
 
-
 export const getAllUsers = async (req, res) => {
-  try {    
+  try {
     const users = await userModel.find().select('-password'); // Exclude password field
 
     res.status(200).json({

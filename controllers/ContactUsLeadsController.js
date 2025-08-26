@@ -48,15 +48,6 @@ export const contactus = async (req, res) => {
             }
         });
 
-        // === Email to Client ===
-        // const clientHtmlContent = loadHtmlTemplate(content.template, {
-        //     'Client Name': name +" "+ lastname,
-        //     'Email': email,
-        //     'Phone Number': phoneNumber,
-        //     'Service': services,
-        //     'Message': message
-        // });
-
         const clientMailOptions = {
             from: `"DevNexus Solutions" <${process.env.USER_MAIL}>`,
             to: email.trim(), // Client's email

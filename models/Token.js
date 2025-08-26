@@ -2,11 +2,17 @@
 import mongoose from "mongoose";
 
 const TokenSchema = new mongoose.Schema({
+  crm_user_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
   page_id: String,
   page_name: String,
   page_access_token: String,
   user_access_token: String,
   token_created_at: Date,
+  user_email: String
 });
 
 const TokenModel = mongoose.model("Token", TokenSchema);

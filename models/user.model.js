@@ -3,34 +3,24 @@ import mongoose from "mongoose";
 import bcrypt from "bcrypt";
 
 const userSchema = new mongoose.Schema({
-  name: {
+  name: String,
+  email: { type: String, unique: true },
+  phone: {
     type: String,
-    required: true,
-    trim: true
+    unique: true
   },
-  email: {
-    type: String,
-    required: true,
-    unique: true,
-    lowercase: true
-  },
-  password: {
-    type: String,
-    required: true
-  },
-  role: {
-    type: String,
-    enum: ['admin', 'user'],
-    default: 'admin'
-  },
-  isActive: {
-    type: Boolean,
-    default: true
-  },
-  lastLogin: {
-    type: Date,
-    default: Date.now
-  },
+  password: String,
+  role: { type: String, enum: ['admin', 'user'], default: 'admin' },
+  adminId: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // link User to Admin
+  facebookPages: [ // store connected FB pages for Admin
+    {
+      pageId: String,
+      pageName: String,
+      accessToken: String
+    }
+  ],
+  isActive: { type: Boolean, default: true },
+  lastLogin: { type: Date, default: Date.now },
   loginHistory: [{
     loginAt: { type: Date, default: Date.now },
     ip: String,

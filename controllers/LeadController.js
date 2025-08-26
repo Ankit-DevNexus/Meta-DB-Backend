@@ -47,7 +47,9 @@ export const createLead = async (req, res) => {
     } = req.body;
 
     const newLead = new LeadsModel({
-      date,
+      user_id: req.user._id,        // from logged-in user
+      user_email: req.user.email,   // from logged-in user
+      date: date || Date.now(),     // default date
       name,
       email,
       phone,
@@ -56,23 +58,27 @@ export const createLead = async (req, res) => {
       requirement,
       source,
       Campaign,
-      assignedTo,
-      assignedDate,
+      assignedTo: assignedTo || null,
+      assignedDate: assignedDate || null,
       status,
       remarks1,
       remarks2,
-      createdById: req.user.id,
-      createdBy: req.user.name,
-      assignedTo: assignedTo || null,
-      assignedDate: assignedDate || null,
-      ...extraFields // This flattens dynamic fields as top-level fields
+      createdBy: req.user.name,     // if you want to keep a display name
+      ...extraFields                // allow dynamic fields
     });
 
     const savedLead = await newLead.save();
 
-    return res.status(201).json({ message: "Lead created successfully", lead: savedLead });
+    return res.status(201).json({
+      message: "Lead created successfully",
+      lead: savedLead
+    })
+
   } catch (error) {
-    return res.status(500).json({ message: "Error creating lead", error: error.message });
+    return res.status(500).json({ 
+      message: "Error creating lead", 
+      error: error.message 
+    });
   }
 };
 
@@ -156,7 +162,7 @@ export const updateLead = async (req, res) => {
     if (!updatedLead) {
       return res.status(404).json({ message: "Lead not found" });
     }
-``
+    ``
     return res.status(200).json({ message: "Lead updated successfully", lead: updatedLead });
   } catch (error) {
     return res.status(500).json({ message: "Error updating lead", error: error.message });
