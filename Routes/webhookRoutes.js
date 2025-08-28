@@ -164,16 +164,6 @@ router.get("/user/leads", Authenticate, async (req, res) => {
       // console.log("User Leads", leadss);
       
 
-    //    let query = {};
-    // if (req.user.role === "admin") {
-    //   query.adminId = req.user._id; // admin sees all his leads
-    // } else {
-    //   query.adminId = req.user.adminId;  // belongs to parent admin
-    //   query.assignedTo = req.user._id;   // but only those assigned to this sub-user
-    // }
-
-    // const leads = await MetaLeadsModel.find(query);
-
       return res.status(200).json({
         message: "Leads fetched successfully",
         totalLeads: leads.length,
