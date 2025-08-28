@@ -2,10 +2,9 @@
 import mongoose from "mongoose";
 
 const leadSchema = new mongoose.Schema({
-  user_id: {
+  adminId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true
   },
   user_email: {
     type: String,

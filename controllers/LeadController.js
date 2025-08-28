@@ -18,7 +18,7 @@ export const createLead = async (req, res) => {
     } = req.body;
 
     const newLead = new LeadsModel({
-      user_id: req.user._id,       // logged-in Admin ID
+      adminId: req.user._id,       // logged-in Admin ID
       user_email: req.user.email,  // logged-in Admin email
       createdBy: req.user.name,    // logged-in Admin name
       name,
