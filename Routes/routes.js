@@ -1,13 +1,13 @@
 import express from 'express'
 import { DashboardController } from '../controllers/DashboardController.js';
 import { deleteUser, getAllUsers, login, signup, updateUser } from '../controllers/authUserContoller.js';
-import { createLead,  getAdsInsights, getAllLeads, updateLead, uploadLeadsFromExcel } from '../controllers/LeadController.js';
+import { createLead, fetchAndSaveNewLeads,  getAdsInsights, getAllLeads, getAllLeadsFromDB, updateLead, uploadLeadsFromExcel } from '../controllers/LeadController.js';
 import upload from '../middleware/multerMiddleware.js';
 import { Authenticate, authorize } from '../middleware/authMiddleware.js';
 import { getUserLoginHistory } from '../controllers/UserLoginHistoryController.js';
 import { contactus, getAllContactSubmissions } from '../controllers/ContactUsLeadsController.js';
 import { forgotPassword, resetPassword } from '../controllers/ForgetPasswordController.js';
-import { SignInController } from '../controllers/SignInController.js';
+// import { SignInController } from '../controllers/SignInController.js';
 import { createAppointment, getAppointments } from '../controllers/AppointmentController.js';
 
 const router = express.Router();
@@ -25,8 +25,8 @@ const router = express.Router();
 // });
 
 //  for ejs login
-router.get('/', SignInController);
-router.post('/', SignInController);
+// router.get('/', SignInController);
+// router.post('/', SignInController);
 
 router.get('/dashboard', DashboardController);
 
@@ -57,6 +57,10 @@ router.patch("/auth/api/get-all-leads/edit/:id",  updateLead);
 // router.get('/auth/api/user-login-history', authorize('admin'), getUserLoginHistory);
 router.get('/auth/api/user-login-history', getUserLoginHistory);
 
+router.get('/auth/api/meta-ads/fetch-meta-leads', fetchAndSaveNewLeads);
+
+router.get('/auth/api/meta-ads/all-leads', getAllLeadsFromDB);
+
 router.get('/auth/api/meta-ads/insights', getAdsInsights);
 
 router.get('/auth/api/contact', getAllContactSubmissions);
@@ -65,6 +69,7 @@ router.post('/auth/api/contact', contactus);
 
 router.post("/auth/api/appointment", createAppointment);   // Create new appointment
 router.get("/auth/api/appointment", getAppointments);      // Get all appointments
+
 
 export default router;
 
