@@ -8,6 +8,7 @@ import { getUserLoginHistory } from '../controllers/UserLoginHistoryController.j
 import { contactus, getAllContactSubmissions } from '../controllers/ContactUsLeadsController.js';
 import { forgotPassword, resetPassword } from '../controllers/ForgetPasswordController.js';
 import { SignInController } from '../controllers/SignInController.js';
+import { createAppointment, getAppointments } from '../controllers/AppointmentController.js';
 
 const router = express.Router();
 
@@ -65,6 +66,9 @@ router.get('/auth/api/meta-ads/insights', getAdsInsights);
 router.get('/auth/api/contact', getAllContactSubmissions);
 
 router.post('/auth/api/contact', contactus);
+
+router.post("/auth/api/appointment", createAppointment);   // Create new appointment
+router.get("/auth/api/appointment", getAppointments);      // Get all appointments
 
 export default router;
 

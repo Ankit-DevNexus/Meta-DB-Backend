@@ -5,8 +5,7 @@ import userModel from "../models/user.model.js";
 
 // Generate JWT
 const generateToken = (user) => {
-      //  console.log("id: user._id, email: user.email,name: user.name, role: user.role",id, email, name, role);
-
+    //  console.log("id: user._id, email: user.email,name: user.name, role: user.role",id, email, name, role);
   return jwt.sign(
     {
       id: user._id,
@@ -21,10 +20,9 @@ const generateToken = (user) => {
 
 
 // Signup Controller
-// Signup Controller
 export const signup = async (req, res) => {
   try {
-    const { name, email, phone, password, confirmPassword, role, isActive, lastLogin, adminId } = req.body;
+    const { name, email, phone, password, confirmPassword, role, isActive, permissions, lastLogin, adminId } = req.body;
 
     if (password !== confirmPassword) {
       return res.status(400).json({ message: "Passwords do not match" });
@@ -64,7 +62,9 @@ export const signup = async (req, res) => {
       role,
       isActive,
       lastLogin,
-      adminId: assignedAdminId
+      adminId: assignedAdminId,
+      permissions: role === "admin" ? [] : permissions || [] // only non-admins get permissions
+
     });
 
     const savedUser = await newUser.save();
@@ -158,29 +158,95 @@ export const getAllUsers = async (req, res) => {
   }
 };
 
-
+// 1
 // Update user
+// export const updateUser = async (req, res) => {
+//   try {
+//     const { id } = req.params; // user ID to update
+//     const { name, email, phone, role, isActive } = req.body;
+
+//     const updatedUser = await userModel.findByIdAndUpdate(
+//       id,
+//       { name, email, phone, role, isActive },
+//       { new: true, runValidators: true }
+//     );
+
+//     if (!updatedUser) {
+//       return res.status(404).json({ message: "User not found" });
+//     }
+
+//     res.status(200).json({
+//       message: "User updated successfully",
+//       user: updatedUser
+//     });
+//   } catch (error) {
+//     res.status(500).json({ message: "Error updating user", error: error.message });
+//   }
+// };
+
+// 2
+// Update user (generic)
+// export const updateUser = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+
+//     // Find user by id
+//     const user = await userModel.findById(id);
+//     if (!user) {
+//       return res.status(404).json({ message: "User not found" });
+//     }
+
+//     // Loop over req.body and only update fields that exist in schema
+//     Object.keys(req.body).forEach((key) => {
+//       if (user[key] !== undefined) {
+//         user[key] = req.body[key];
+//       }
+//     });
+
+//     // Save updated user
+//     const updatedUser = await user.save();
+
+//     res.json({
+//       message: "User updated successfully",
+//       user: updatedUser,
+//     });
+//   } catch (error) {
+//     res.status(500).json({ message: "Error updating user", error: error.message });
+//   }
+// };
+
+// 3
+
+// Update User
 export const updateUser = async (req, res) => {
   try {
-    const { id } = req.params; // user ID to update
-    const { name, email, phone, role, isActive } = req.body;
+    const { id } = req.params;
+
+    // Get allowed schema keys
+    const allowedUpdates = Object.keys(userModel.schema.paths);
+
+    // Filter req.body to only include valid schema fields
+    const updates = {};
+    for (const key of Object.keys(req.body)) {
+      if (allowedUpdates.includes(key)) {
+        updates[key] = req.body[key];
+      }
+    }
 
     const updatedUser = await userModel.findByIdAndUpdate(
       id,
-      { name, email, phone, role, isActive },
-      { new: true, runValidators: true }
+      { $set: updates }, // only update provided fields
+      { new: true } // return updated document
     );
 
     if (!updatedUser) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    res.status(200).json({
-      message: "User updated successfully",
-      user: updatedUser
-    });
-  } catch (error) {
-    res.status(500).json({ message: "Error updating user", error: error.message });
+    res.json(updatedUser);
+  } catch (err) {
+    console.error("Error updating user:", err);
+    res.status(500).json({ message: "Server error" });
   }
 };
 

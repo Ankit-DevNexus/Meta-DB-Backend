@@ -12,6 +12,10 @@ const userSchema = new mongoose.Schema({
   password: String,
   role: { type: String, enum: ['admin', 'user'], default: 'admin' },
   adminId: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // link User to Admin
+ permissions: {
+    type: [String], // list of allowed sidebar tabs
+    default: [],
+  },
   facebookPages: [ // store connected FB pages for Admin
     {
       pageId: String,
@@ -37,7 +41,6 @@ userSchema.pre("save", async function (next) {
   this.password = await bcrypt.hash(this.password, salt);
   next();
 });
-
 
 // Compare password
 userSchema.methods.comparePassword = async function (password) {

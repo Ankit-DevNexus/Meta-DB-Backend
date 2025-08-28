@@ -9,7 +9,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import cors from 'cors';
 import webhookRoutes from './Routes/webhookRoutes.js'
-import callback from './Routes/Callback_temp.js';
+import callback from './Routes/CallbackRoute.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
