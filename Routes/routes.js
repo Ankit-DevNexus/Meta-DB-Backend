@@ -1,7 +1,7 @@
 import express from 'express'
 import { DashboardController } from '../controllers/DashboardController.js';
 import { deleteUser, getAllUsers, login, signup, updateUser } from '../controllers/authUserContoller.js';
-import { createLead, fetchAndSaveNewLeads,  getAdsInsights, getAllLeads, getAllLeadsFromDB, updateLead, uploadLeadsFromExcel } from '../controllers/LeadController.js';
+import { createLead,  getAdsInsights, getAllLeads, updateLead, uploadLeadsFromExcel } from '../controllers/LeadController.js';
 import upload from '../middleware/multerMiddleware.js';
 import { Authenticate, authorize } from '../middleware/authMiddleware.js';
 import { getUserLoginHistory } from '../controllers/UserLoginHistoryController.js';
@@ -56,10 +56,6 @@ router.patch("/auth/api/get-all-leads/edit/:id",  updateLead);
 // get login history
 // router.get('/auth/api/user-login-history', authorize('admin'), getUserLoginHistory);
 router.get('/auth/api/user-login-history', getUserLoginHistory);
-
-router.get('/auth/api/meta-ads/fetch-meta-leads', fetchAndSaveNewLeads);
-
-router.get('/auth/api/meta-ads/all-leads', getAllLeadsFromDB);
 
 router.get('/auth/api/meta-ads/insights', getAdsInsights);
 

@@ -125,7 +125,7 @@ export const webhookLeadsRecevieFromFacebook = async (req, res) => {
               assignedTo: null,
               assignedDate: null,
               status: 'new',
-              tags: '',
+              tags: [],
               remarks1: '',
               remarks2: '',
             });
@@ -145,6 +145,7 @@ export const webhookLeadsRecevieFromFacebook = async (req, res) => {
 };
 
 
+// get leads from DB that comes from meta APIs
 export const getAllLeadsForAuthorizeAdmin = async (req, res) => {
   try {
     let query = {};
@@ -165,6 +166,43 @@ export const getAllLeadsForAuthorizeAdmin = async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch leads", details: err.message });
+  }
+};
+
+// Update leads (single or multiple)
+export const updateLeadsComesFromMeta =  async (req, res) => {
+  try {
+    const { leadIds, updateData } = req.body;
+
+    if (!leadIds || !Array.isArray(leadIds) || leadIds.length === 0) {
+      return res.status(400).json({ error: "leadIds must be a non-empty array" });
+    }
+
+    if (!updateData || typeof updateData !== "object") {
+      return res.status(400).json({ error: "updateData must be an object" });
+    }
+
+    // Ensure admin/user updates only their own leads
+    let query = {};
+    if (req.user.role === "admin") {
+      query.adminId = new mongoose.Types.ObjectId(req.user._id);
+    } else {
+      query.adminId = new mongoose.Types.ObjectId(req.user.adminId);
+      query.assignedTo = String(req.user._id);
+    }
+
+    // Apply only to requested leads
+    query._id = { $in: leadIds.map(id => new mongoose.Types.ObjectId(id)) };
+
+    const result = await MetaLeadsModel.updateMany(query, { $set: updateData });
+
+    return res.status(200).json({
+      message: "Leads updated successfully",
+      matchedCount: result.matchedCount,
+      modifiedCount: result.modifiedCount
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to update leads", details: err.message });
   }
 };
 

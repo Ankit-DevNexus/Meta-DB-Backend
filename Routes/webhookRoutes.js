@@ -1,5 +1,5 @@
 import express from 'express'
-import { getAllLeadsForAuthorizeAdmin, webhookFacebookVerification, webhookLeadsRecevieFromFacebook } from '../controllers/webhookController.js';
+import { getAllLeadsForAuthorizeAdmin, updateLeadsComesFromMeta, webhookFacebookVerification, webhookLeadsRecevieFromFacebook } from '../controllers/webhookController.js';
 import { Authenticate } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
@@ -9,6 +9,8 @@ router.get('/webhook', webhookFacebookVerification);
 router.post('/webhook', webhookLeadsRecevieFromFacebook);
 
 router.get('/user/leads', Authenticate, getAllLeadsForAuthorizeAdmin);
+
+router.patch('/user/leads/update/:id', Authenticate, updateLeadsComesFromMeta);
 
 
 export default router;

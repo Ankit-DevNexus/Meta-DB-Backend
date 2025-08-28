@@ -4,12 +4,11 @@ import { connectFacebook, facebookCallback, facebookConfig, facebookStatus } fro
 
 const router = express.Router();
 
-
 router.get("/facebook/connect", Authenticate, connectFacebook);
 
 router.get("/facebook/config", facebookConfig);
 
-router.get("/facebook/status", facebookStatus);
+router.get("/facebook/status", Authenticate, facebookStatus);
 
 router.get("/facebook/callback", facebookCallback);
 
