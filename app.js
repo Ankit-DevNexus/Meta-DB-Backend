@@ -24,26 +24,22 @@ getDashboardDB(DASHBOARD_DB_URI)
 
 // app.use(cors()); // Enables CORS for all routes
 
-// app.use(cors({
-//   origin: 'http://localhost:5174', // frontend origin
-//   credentials: true               // allow cookies, authorization headers, etc.
-// }));
-
-
-app.use(cors({
-  origin: "*",   // Allow all origins
-  credentials: false  // Must be false when origin is "*"
-}));
-
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:3001',
+];
 
 app.use(cors({
-  origin: (origin, callback) => {
-    callback(null, true);  // allow all origins
+  origin: function(origin, callback) {
+    if (allowedOrigins.includes(origin) || !origin) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
   },
   credentials: true
 }));
-
-
 
 // Add this line to parse JSON bodies
 app.use(express.json()); 

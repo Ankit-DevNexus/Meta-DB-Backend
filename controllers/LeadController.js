@@ -82,10 +82,36 @@ export const uploadLeadsFromExcel = async (req, res) => {
 
 
 // get all leads from created leads 
+// export const getAllLeads = async (req, res) => {
+//   try {
+//     const leads = await LeadsModel.find()
+//       .select('-source -Campaign') // Exclude these fields
+
+//     return res.status(200).json({
+//       message: "Leads fetched successfully",
+//       totalLeads: leads.length,
+//       leads: leads
+//     });
+//   } catch (error) {
+//     return res.status(500).json({ message: "Error fetching leads", error: error.message });
+//   }
+// };
+
+// get all leads from created leads 
 export const getAllLeads = async (req, res) => {
   try {
-    const leads = await LeadsModel.find()
-      .select('-source -Campaign') // Exclude these fields
+    let filter = {};
+
+    if (req.user.role === "admin") {
+      // Admin sees only his own leads
+      filter.user_id = req.user._id;
+    } else if (req.user.role === "user") {
+      // User sees only leads created by his Admin
+      filter.user_id = req.user.adminId;  // <-- requires adminId in user model
+    }
+
+    const leads = await LeadsModel.find(filter)
+      .select('-source -Campaign'); // Exclude these fields
 
     return res.status(200).json({
       message: "Leads fetched successfully",
@@ -93,7 +119,10 @@ export const getAllLeads = async (req, res) => {
       leads: leads
     });
   } catch (error) {
-    return res.status(500).json({ message: "Error fetching leads", error: error.message });
+    return res.status(500).json({ 
+      message: "Error fetching leads", 
+      error: error.message 
+    });
   }
 };
 
