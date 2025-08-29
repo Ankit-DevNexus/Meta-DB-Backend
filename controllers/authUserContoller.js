@@ -23,7 +23,7 @@ const generateToken = (user) => {
 // Signup Controller
 export const signup = async (req, res) => {
   try {
-    const { name, email, phone, password, confirmPassword, role, isActive, permissions, lastLogin, adminId } = req.body;
+    const { name, EmpUsername, email, phone, password, confirmPassword, role, isActive, permissions, lastLogin, adminId } = req.body;
 
     if (password !== confirmPassword) {
       return res.status(400).json({ message: "Passwords do not match" });
@@ -57,6 +57,7 @@ export const signup = async (req, res) => {
     // Create user
     const newUser = new userModel({
       name,
+      EmpUsername,
       email,
       phone,
       password,
@@ -84,6 +85,7 @@ export const signup = async (req, res) => {
       user: {
         id: savedUser._id,
         name: savedUser.name,
+        EmpUsername: savedUser.EmpUsername,
         email: savedUser.email,
         role: savedUser.role,
         adminId: savedUser.adminId
@@ -105,7 +107,7 @@ export const login = async (req, res) => {
     if (!isNaN(username)) {
       query = { phone: username };
     } else {
-      query = { email: username.toLowerCase() };
+      query = { email: username.trim().toLowerCase() };
     }
 
     const user = await userModel.findOne(query);

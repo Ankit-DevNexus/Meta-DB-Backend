@@ -1,13 +1,12 @@
 import express from 'express'
 import { DashboardController } from '../controllers/DashboardController.js';
 import { deleteUser, getAllUsers, login, signup, updateUser } from '../controllers/authUserContoller.js';
-import { createLead, fetchAndSaveNewLeads,  getAdsInsights, getAllLeads, getAllLeadsFromDB, updateLead, uploadLeadsFromExcel } from '../controllers/LeadController.js';
+import { createLead, fetchAndSaveNewLeads,  getAdsInsights, getAllLeads, getAllLeadsFromDB, updateLeads, uploadLeadsFromExcel } from '../controllers/LeadController.js';
 import upload from '../middleware/multerMiddleware.js';
 import { Authenticate, authorize } from '../middleware/authMiddleware.js';
 import { getUserLoginHistory } from '../controllers/UserLoginHistoryController.js';
 import { contactus, getAllContactSubmissions } from '../controllers/ContactUsLeadsController.js';
 import { forgotPassword, resetPassword } from '../controllers/ForgetPasswordController.js';
-// import { SignInController } from '../controllers/SignInController.js';
 import { createAppointment, getAppointments } from '../controllers/AppointmentController.js';
 
 const router = express.Router();
@@ -51,7 +50,7 @@ router.get('/auth/api/get-all-leads', Authenticate, getAllLeads);
 router.post("/auth/api/upload-excel-leads", Authenticate, upload.single("file"), uploadLeadsFromExcel);
 
 // update leads 
-router.patch("/auth/api/get-all-leads/edit/:id",  updateLead);
+router.patch("/auth/api/get-all-leads", Authenticate, updateLeads);
 
 // get login history
 // router.get('/auth/api/user-login-history', authorize('admin'), getUserLoginHistory);

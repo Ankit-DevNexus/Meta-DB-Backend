@@ -1,5 +1,4 @@
 
-
 //controllers/webhookController.js
 import axios from 'axios';
 import MetaLeadsModel from "../models/MetaLeadsModel.js";
@@ -22,7 +21,6 @@ export const webhookFacebookVerification = (req, res) => {
     res.sendStatus(403);
   }
 };
-
 
 // Webhook endpoint to receive Meta (Facebook) leads
 export const webhookLeadsRecevieFromFacebook = async (req, res) => {

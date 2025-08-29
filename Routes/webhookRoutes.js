@@ -10,7 +10,7 @@ router.post('/webhook', webhookLeadsRecevieFromFacebook);
 
 router.get('/user/leads', Authenticate, getAllLeadsForAuthorizeAdmin);
 
-router.patch('/user/leads/update/:id', Authenticate, updateLeadsComesFromMeta);
+router.patch('/user/leads', Authenticate, updateLeadsComesFromMeta);
 
 
 export default router;

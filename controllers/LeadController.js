@@ -81,23 +81,6 @@ export const uploadLeadsFromExcel = async (req, res) => {
   }
 };
 
-
-// get all leads from created leads 
-// export const getAllLeads = async (req, res) => {
-//   try {
-//     const leads = await LeadsModel.find()
-//       .select('-source -Campaign') // Exclude these fields
-
-//     return res.status(200).json({
-//       message: "Leads fetched successfully",
-//       totalLeads: leads.length,
-//       leads: leads
-//     });
-//   } catch (error) {
-//     return res.status(500).json({ message: "Error fetching leads", error: error.message });
-//   }
-// };
-
 // get all leads from created leads 
 export const getAllLeads = async (req, res) => {
   try {
@@ -133,45 +116,102 @@ export const getAllLeads = async (req, res) => {
 };
 
 
-export const updateLead = async (req, res) => {
+export const updateLeads = async (req, res) => {
   try {
-    const leadId = req.params.id;
+    let { leadIds, updates } = req.body;
+    // leadIds: array of lead IDs to update
+    // updates: fields to update
 
-    // Extract all updatable fields
-    const {
-      name, email, phone, city,
-      requirement, assignedTo, assignedDate, status
-    } = req.body;
+    if (!Array.isArray(leadIds) || leadIds.length === 0) {
+      return res.status(400).json({ message: "leadIds must be a non-empty array" });
+    }
 
+    // Build base query
+    // let query = {
+    //   _id: { $in: leadIds.map(id => new mongoose.Types.ObjectId(id)) }
+    // };
 
-    // Build update object
-    const updateData = {
-      ...(name && { name }),
-      ...(email && { email }),
-      ...(phone && { phone }),
-      ...(city && { city }),
-      ...(requirement && { requirement }),
-      assignedTo: assignedTo || null,
-      assignedDate: assignedDate || null,
-      ...(status && { status })
-    };
+    // Restrict by role
+    // if (req.user.role === "admin") {
+    //   query.adminId = req.user._id;  // admin can only update his own leads
+    // } else {
+    //   query.adminId = req.user.adminId;   // belongs to parent admin
+    //   query.assignedTo = String(req.user._id); // and must be assigned to this user
+    // }
 
-    const updatedLead = await LeadsModel.findOneAndUpdate(
-      { _id: leadId },
-      { $set: updateData },
-      { new: true, runValidators: true }
+    let query = {};
+    if (req.user.role === "admin") {
+      query.adminId = new mongoose.Types.ObjectId(req.user._id);
+    } else {
+      query.adminId = new mongoose.Types.ObjectId(req.user.adminId);
+      query.assignedTo = String(req.user._id);
+    }
+
+    query._id = { $in: leadIds.map(id => new mongoose.Types.ObjectId(id)) };
+    
+    // Perform update
+    const result = await LeadsModel.updateMany(
+      query,
+      { $set: updates },
+      { new: true }
     );
 
-
-    if (!updatedLead) {
-      return res.status(404).json({ message: "Lead not found" });
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ message: "No matching leads found or permission denied" });
     }
-    ``
-    return res.status(200).json({ message: "Lead updated successfully", lead: updatedLead });
+
+    return res.status(200).json({
+      message: "Leads updated successfully",
+      matched: result.matchedCount,
+      modified: result.modifiedCount
+    });
+
   } catch (error) {
-    return res.status(500).json({ message: "Error updating lead", error: error.message });
+    return res.status(500).json({
+      message: "Error updating leads",
+      error: error.message
+    });
   }
 };
+
+// export const updateLead = async (req, res) => {
+//   try {
+//     const leadId = req.params.id;
+
+//     // Extract all updatable fields
+//     const {
+//       name, email, phone, city,
+//       requirement, assignedTo, assignedDate, status
+//     } = req.body;
+
+
+//     // Build update object
+//     const updateData = {
+//       ...(name && { name }),
+//       ...(email && { email }),
+//       ...(phone && { phone }),
+//       ...(city && { city }),
+//       ...(requirement && { requirement }),
+//       assignedTo: assignedTo || null,
+//       assignedDate: assignedDate || null,
+//       ...(status && { status })
+//     };
+
+//     const updatedLead = await LeadsModel.findOneAndUpdate(
+//       { _id: leadId },
+//       { $set: updateData },
+//       { new: true, runValidators: true }
+//     );
+
+
+//     if (!updatedLead) {
+//       return res.status(404).json({ message: "Lead not found" });
+//     }
+//     return res.status(200).json({ message: "Lead updated successfully", lead: updatedLead });
+//   } catch (error) {
+//     return res.status(500).json({ message: "Error updating lead", error: error.message });
+//   }
+// };
 
 // get leads from meta APIs
 

@@ -35,6 +35,7 @@ const leadSchema = new mongoose.Schema({
     type: String,
     default: "new"
   },
+  tags: [String],
   remarks1: String,
   remarks2: String,
 }, {
