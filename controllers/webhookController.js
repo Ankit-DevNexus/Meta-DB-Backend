@@ -1,7 +1,6 @@
 
 
 //controllers/webhookController.js
-import express from 'express';
 import axios from 'axios';
 import MetaLeadsModel from "../models/MetaLeadsModel.js";
 import TokenModel from "../models/Token.js";
@@ -150,20 +149,24 @@ export const getAllLeadsForAuthorizeAdmin = async (req, res) => {
   try {
     let query = {};
 
-    if (req.user.role === "admin") {
-      query.adminId = new mongoose.Types.ObjectId(req.user._id); // Admin: all his leads
-    } else {
-      query.adminId = new mongoose.Types.ObjectId(req.user.adminId); // Belongs to parent admin
-      query.assignedTo = String(req.user._id); // Only leads assigned to this user
-    }
+     if (req.user.role === "admin") {
+          // Admin sees only his own leads
+          query.adminId = new mongoose.Types.ObjectId(req.user._id);
+        } else if (req.user.role === "user") {
+          // User sees all leads created by their Admin
+          query.adminId = new mongoose.Types.ObjectId(req.user.adminId);
+    
+          // uncomment later when assignedTo is ObjectId
+          // query.assignedTo = req.user._id;
+        }
 
-    const leads = await MetaLeadsModel.find(query);
+        const leads = await MetaLeadsModel.find(query);
 
-    return res.status(200).json({
-      message: "Leads fetched successfully",
-      totalLeads: leads.length,
-      leads
-    });
+        return res.status(200).json({
+          message: "Leads fetched successfully",
+          totalLeads: leads.length,
+          leads
+        });
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch leads", details: err.message });
   }

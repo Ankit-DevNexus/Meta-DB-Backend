@@ -11,7 +11,8 @@ const generateToken = (user) => {
       id: user._id,
       email: user.email,
       name: user.name,
-      role: user.role
+      role: user.role,
+        adminId: user.role === "admin" ? user._id.toString() : user.adminId.toString(),
     },
     process.env.JWT_SECRET,
     { expiresIn: "1h" }

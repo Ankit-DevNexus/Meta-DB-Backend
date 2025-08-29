@@ -16,13 +16,20 @@ export const Authenticate = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     // Fetch user from DB and include role
-    const user = await userModel.findById(decoded.id).select("_id email name role");
+    const user = await userModel.findById(decoded.id).select("_id email name role adminId");
     if (!user) {
       return res.status(401).json({ message: "User not found" });
     }
 
-    req.user = user; // now req.user is available in controllers
-   
+    // req.user = user; // now req.user is available in controllers
+    // 🔑 Attach user object + adminId from JWT
+    req.user = {
+      _id: user._id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      adminId: decoded.adminId || user.adminId, // ✅ make sure adminId is available
+    };
     next();
   } catch (error) {
     return res

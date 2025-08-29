@@ -12,7 +12,7 @@ const userSchema = new mongoose.Schema({
   password: String,
   role: { type: String, enum: ['admin', 'user'], default: 'admin' },
   adminId: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // link User to Admin
- permissions: {
+  permissions: {
     type: [String], // list of allowed sidebar tabs
     default: [],
   },

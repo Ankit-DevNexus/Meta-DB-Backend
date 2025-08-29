@@ -6,6 +6,7 @@ import xlsx from "xlsx";
 import LeadsModel from "../models/LeadModel.js";
 import metaAdsLeadsModel from '../models/metaAdsLeadModel.js';
 import { fetchAllLeads } from '../utils/metaLeadUtils.js';
+import mongoose from 'mongoose';
 
 // create leads manually
 export const createLead = async (req, res) => {
@@ -34,7 +35,7 @@ export const createLead = async (req, res) => {
       status: status || "new",     // default to new
       remarks1,
       remarks2,
-      ...extraFields               // keep any dynamic fields
+      ...extraFields // dynamic fields
     });
 
     const savedLead = await newLead.save();
@@ -100,31 +101,37 @@ export const uploadLeadsFromExcel = async (req, res) => {
 // get all leads from created leads 
 export const getAllLeads = async (req, res) => {
   try {
-    let filter = {};
+    let query = {};
 
     if (req.user.role === "admin") {
       // Admin sees only his own leads
-      filter.user_id = req.user._id;
+      query.adminId = new mongoose.Types.ObjectId(req.user._id);
     } else if (req.user.role === "user") {
-      // User sees only leads created by his Admin
-      filter.user_id = req.user.adminId;  // <-- requires adminId in user model
+      // User sees all leads created by their Admin
+      query.adminId = new mongoose.Types.ObjectId(req.user.adminId);
+
+      // uncomment later when assignedTo is ObjectId
+      // query.assignedTo = req.user._id;
     }
 
-    const leads = await LeadsModel.find(filter)
-      .select('-source -Campaign'); // Exclude these fields
+    // console.log("User role:", req.user.role);
+    // console.log("Query adminId:", query.adminId);
+
+    const leads = await LeadsModel.find(query);
 
     return res.status(200).json({
       message: "Leads fetched successfully",
       totalLeads: leads.length,
-      leads: leads
+      leads
     });
   } catch (error) {
-    return res.status(500).json({ 
-      message: "Error fetching leads", 
-      error: error.message 
+    return res.status(500).json({
+      message: "Error fetching leads",
+      error: error.message
     });
   }
 };
+
 
 export const updateLead = async (req, res) => {
   try {
