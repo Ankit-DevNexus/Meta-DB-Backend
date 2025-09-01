@@ -2,7 +2,7 @@ import crypto from 'crypto';
 import { sendEmail } from '../utils/SendEmail.js';
 import userModel from '../models/user.model.js';
 
-const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000';
+const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3001';
 
 export const forgotPassword = async (req, res) => {
     if (req.method === 'GET') {
@@ -43,8 +43,8 @@ export const forgotPassword = async (req, res) => {
 
 export const resetPassword = async (req, res) => {
     if (req.method === 'GET') {
-        const { email, token } = req.query; // <-- Extract from query params
-        res.render('UpdatePassword', { email, token }); // <-- Pass to EJS
+        const { token } = req.params; // from params
+        res.render('UpdatePassword', { token });
     } else if (req.method === 'POST') {
         try {
             const { token } = req.params;
@@ -52,15 +52,10 @@ export const resetPassword = async (req, res) => {
 
             const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
 
-            console.log("Token from URL:", token);
-            console.log("Hashed token:", hashedToken);
-            
             const user = await userModel.findOne({
                 resetPasswordToken: hashedToken,
                 resetPasswordExpires: { $gt: Date.now() }
             });
-
-            console.log("User found:", user);
 
             if (!user) return res.status(400).json({ msg: 'Invalid or expired token' });
 
@@ -74,10 +69,9 @@ export const resetPassword = async (req, res) => {
         } catch (error) {
             res.status(500).json({ msg: 'Server error', error: error.message });
         }
-
     }
-
 };
+
 
 
 

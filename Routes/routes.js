@@ -1,5 +1,4 @@
 import express from 'express'
-import { DashboardController } from '../controllers/DashboardController.js';
 import { deleteUser, getAllUsers, login, signup, updateUser } from '../controllers/authUserContoller.js';
 import { createLead, fetchAndSaveNewLeads,  getAdsInsights, getAllLeads, getAllLeadsFromDB, updateLeads, uploadLeadsFromExcel } from '../controllers/LeadController.js';
 import upload from '../middleware/multerMiddleware.js';
@@ -10,8 +9,6 @@ import { forgotPassword, resetPassword } from '../controllers/ForgetPasswordCont
 import { createAppointment, getAppointments } from '../controllers/AppointmentController.js';
 
 const router = express.Router();
-
-
 
 // const clientId = process.env.APP_ID;
 // const redirectUri = process.env.REDIRECT_URI;
@@ -27,21 +24,20 @@ const router = express.Router();
 // router.get('/', SignInController);
 // router.post('/', SignInController);
 
-router.get('/dashboard', DashboardController);
 
 router.get('/forgot-password', forgotPassword);
 router.post('/forgot-password', forgotPassword);
 
-router.post('/reset-password/:token', resetPassword);
-router.post('/reset-password/:token', resetPassword);
+router.get('/reset-password/:token', resetPassword);
+router.post("/reset-password/:token", resetPassword);
 
 // sign up and login routes
 router.post('/auth/api/signup-users', signup);
 router.post('/auth/api/signin-users', login);
 
-router.get('/auth/api/get-all-users',   getAllUsers);
-router.put('/auth/api/update-user/:id',   updateUser);
-router.delete('/auth/api/delete-user/:id',   deleteUser);
+router.get('/auth/api/get-all-users', Authenticate, getAllUsers);
+router.put('/auth/api/update-user/:id', updateUser);
+router.delete('/auth/api/delete-user/:id', deleteUser);
 
 
 // create and get Leads
