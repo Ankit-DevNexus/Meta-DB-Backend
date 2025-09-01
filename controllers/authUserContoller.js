@@ -6,19 +6,24 @@ import mongoose from "mongoose";
 
 // Generate JWT
 const generateToken = (user) => {
-  //  console.log("id: user._id, email: user.email,name: user.name, role: user.role",id, email, name, role);
   return jwt.sign(
     {
       id: user._id,
       email: user.email,
       name: user.name,
       role: user.role,
-      adminId: user.role === "admin" ? user._id.toString() : user.adminId.toString(),
+      adminId:
+        user.role === "admin"
+          ? user._id.toString()
+          : user.adminId
+          ? user.adminId.toString()
+          : null, // fallback if no admin assigned
     },
     process.env.JWT_SECRET,
     { expiresIn: "1h" }
   );
 };
+
 
 
 // Signup Controller
@@ -200,6 +205,62 @@ export const getAllUsers = async (req, res) => {
 };
 
 
+
+// Update User
+export const updateUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Get allowed schema keys
+    const allowedUpdates = Object.keys(userModel.schema.paths);
+
+    // Filter req.body to only include valid schema fields
+    const updates = {};
+    for (const key of Object.keys(req.body)) {
+      if (allowedUpdates.includes(key)) {
+        updates[key] = req.body[key];
+      }
+    }
+
+    const updatedUser = await userModel.findByIdAndUpdate(
+      id,
+      { $set: updates }, // only update provided fields
+      { new: true } // return updated document
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json(updatedUser);
+  } catch (err) {
+    console.error("Error updating user:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+
+// Delete user
+export const deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const deletedUser = await userModel.findByIdAndDelete(id);
+
+    if (!deletedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({
+      message: "User deleted successfully",
+      user: deletedUser
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error deleting user", error: error.message });
+  }
+};
+
+
 // 1
 // Update user
 // export const updateUser = async (req, res) => {
@@ -258,57 +319,3 @@ export const getAllUsers = async (req, res) => {
 // };
 
 // 3
-
-// Update User
-export const updateUser = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    // Get allowed schema keys
-    const allowedUpdates = Object.keys(userModel.schema.paths);
-
-    // Filter req.body to only include valid schema fields
-    const updates = {};
-    for (const key of Object.keys(req.body)) {
-      if (allowedUpdates.includes(key)) {
-        updates[key] = req.body[key];
-      }
-    }
-
-    const updatedUser = await userModel.findByIdAndUpdate(
-      id,
-      { $set: updates }, // only update provided fields
-      { new: true } // return updated document
-    );
-
-    if (!updatedUser) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    res.json(updatedUser);
-  } catch (err) {
-    console.error("Error updating user:", err);
-    res.status(500).json({ message: "Server error" });
-  }
-};
-
-
-// Delete user
-export const deleteUser = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const deletedUser = await userModel.findByIdAndDelete(id);
-
-    if (!deletedUser) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    res.status(200).json({
-      message: "User deleted successfully",
-      user: deletedUser
-    });
-  } catch (error) {
-    res.status(500).json({ message: "Error deleting user", error: error.message });
-  }
-};
