@@ -19,28 +19,33 @@ export const getAllContactSubmissions = async (req, res) => {
 
 
 
-export const updateContactSubmission = async (req, res) => {
+export const updateContactSubmissions = async (req, res) => {
   try {
-    const { id } = req.params; // Lead ID from URL
-    const updateData = req.body; // Fields to update
+    const { ids } = req.body; // Array of Lead IDs
+    const updateData = req.body.updateData; // Fields to update
 
-    const updatedSubmission = await contactUsModel.findByIdAndUpdate(
-      id,
-      { $set: updateData },
-      { new: true, runValidators: true }
-    );
-
-    if (!updatedSubmission) {
-      return res.status(404).json({ message: "Lead not found" });
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: "No lead IDs provided" });
     }
 
+    if (!updateData || Object.keys(updateData).length === 0) {
+      return res.status(400).json({ error: "No update data provided" });
+    }
+
+    const result = await contactUsModel.updateMany(
+      { _id: { $in: ids } },
+      { $set: updateData },
+      { runValidators: true }
+    );
+
     res.status(200).json({
-      message: "Lead updated successfully",
-      updatedSubmission
+      message: "Leads updated successfully",
+      matched: result.matchedCount,
+      modified: result.modifiedCount,
     });
   } catch (error) {
-    console.error("Error updating contact submission:", error);
-    res.status(500).json({ error: "Failed to update lead" });
+    console.error("Error updating contact submissions:", error);
+    res.status(500).json({ error: "Failed to update leads" });
   }
 };
 

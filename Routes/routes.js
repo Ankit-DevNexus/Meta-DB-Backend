@@ -4,7 +4,7 @@ import { createLead, fetchAndSaveNewLeads,  getAdsInsights, getAllLeads, getAllL
 import upload from '../middleware/multerMiddleware.js';
 import { Authenticate, authorize } from '../middleware/authMiddleware.js';
 import { getUserLoginHistory } from '../controllers/UserLoginHistoryController.js';
-import { contactus, getAllContactSubmissions, updateContactSubmission } from '../controllers/ContactUsLeadsController.js';
+import { contactus, getAllContactSubmissions, updateContactSubmissions } from '../controllers/ContactUsLeadsController.js';
 import { forgotPassword, resetPassword } from '../controllers/ForgetPasswordController.js';
 import { createAppointment, getAppointments } from '../controllers/AppointmentController.js';
 import { DashboardController } from '../controllers/DashboardController.js';
@@ -64,10 +64,9 @@ router.get('/auth/api/meta-ads/insights', getAdsInsights);
 router.get('/auth/api/contact', getAllContactSubmissions);
 
 router.post('/auth/api/contact', contactus);
-router.patch('/auth/api/contact', updateContactSubmission);
+router.patch('/auth/api/contact', updateContactSubmissions);
 
 router.post("/auth/api/appointment", createAppointment);   // Create new appointment
 router.get("/auth/api/appointment", getAppointments);      // Get all appointments
-
 
 export default router;
