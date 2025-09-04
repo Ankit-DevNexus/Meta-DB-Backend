@@ -22,13 +22,13 @@ export const Authenticate = async (req, res, next) => {
     }
 
     // req.user = user; // now req.user is available in controllers
-    // 🔑 Attach user object + adminId from JWT
+    // Attach user object + adminId from JWT
     req.user = {
       _id: user._id,
       email: user.email,
       name: user.name,
       role: user.role,
-      adminId: decoded.adminId || user.adminId, // ✅ make sure adminId is available
+      adminId: decoded.adminId || user.adminId, // make sure adminId is available
     };
     next();
   } catch (error) {
