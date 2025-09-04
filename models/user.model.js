@@ -1,4 +1,4 @@
-// models/UserModel.js
+// models/User.model.js
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
 
@@ -7,6 +7,7 @@ const userSchema = new mongoose.Schema({
   EmpUsername: {
     type: String,
     required: true,
+    unique: true
   },
   email: { type: String, unique: true, lowercase: true, trim: true },
   phone: {
@@ -16,10 +17,18 @@ const userSchema = new mongoose.Schema({
   password: String,
   role: { type: String, enum: ['admin', 'user'], default: 'admin' },
   adminId: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // link User to Admin
-  permissions: {
-    type: [String], // list of allowed sidebar tabs
-    default: [],
-  },
+  permissions: [
+    {
+      label: { type: String, required: true },
+      path: { type: String, required: true },
+      children: [
+        {
+          label: { type: String, required: true },
+          path: { type: String, required: true }
+        }
+      ]
+    }
+  ],
   facebookPages: [ // store connected FB pages for Admin
     {
       pageId: String,

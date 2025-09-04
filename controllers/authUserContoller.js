@@ -3,6 +3,8 @@
 import jwt from "jsonwebtoken";
 import userModel from "../models/user.model.js";
 import mongoose from "mongoose";
+import { ALL_PERMISSIONS } from "../utils/permissions.js";
+
 
 // Generate JWT
 const generateToken = (user) => {
@@ -23,8 +25,6 @@ const generateToken = (user) => {
     { expiresIn: "1h" }
   );
 };
-
-
 
 // Signup Controller
 export const signup = async (req, res) => {
@@ -61,8 +61,8 @@ export const signup = async (req, res) => {
         message: existingUser.email === email?.toLowerCase()
           ? "Email already exists"
           : existingUser.phone === phone
-            ? "Phone number already exists"
-            : "Employee Username already exists"
+          ? "Phone number already exists"
+          : "Employee Username already exists"
       });
     }
 
@@ -79,18 +79,26 @@ export const signup = async (req, res) => {
       }
     }
 
+    // Permissions handling
+    let finalPermissions = [];
+    if (role === "admin") {
+      finalPermissions = ALL_PERMISSIONS; // Admin gets everything
+    } else {
+      finalPermissions = permissions || []; // User gets limited
+    }
+
     // Create user
     const newUser = new userModel({
       name,
       EmpUsername,
-      email: email?.toLowerCase(),
+      email,
       phone,
       password,
       role,
       isActive,
       lastLogin,
       adminId: assignedAdminId,
-      permissions: role === "admin" ? [] : permissions || []
+      permissions: finalPermissions
     });
 
     const savedUser = await newUser.save();
@@ -112,15 +120,14 @@ export const signup = async (req, res) => {
         EmpUsername: savedUser.EmpUsername,
         email: savedUser.email,
         role: savedUser.role,
-        adminId: savedUser.adminId
+        adminId: savedUser.adminId,
+        permissions: savedUser.permissions
       }
     });
   } catch (err) {
     res.status(500).json({ msg: "Server error", error: err.message });
   }
 };
-
-
 
 // Login Controller
 export const login = async (req, res) => {
@@ -203,8 +210,6 @@ export const getAllUsers = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
-
-
 
 // Update User
 export const updateUser = async (req, res) => {

@@ -117,7 +117,8 @@
     if (res.ok) {
       // Store token in localStorage
       localStorage.setItem("token", data.token);
-      alert("Login successful! Token saved.");
+      // alert("Login successful! Token saved.");
+      window.location.href = "/dashboard";
       console.log("Saved token:", localStorage.getItem("token"));
     } else {
       alert(data.error || "Login failed");

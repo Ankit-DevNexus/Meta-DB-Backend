@@ -18,6 +18,33 @@ export const getAllContactSubmissions = async (req, res) => {
 };
 
 
+
+export const updateContactSubmission = async (req, res) => {
+  try {
+    const { id } = req.params; // Lead ID from URL
+    const updateData = req.body; // Fields to update
+
+    const updatedSubmission = await contactUsModel.findByIdAndUpdate(
+      id,
+      { $set: updateData },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedSubmission) {
+      return res.status(404).json({ message: "Lead not found" });
+    }
+
+    res.status(200).json({
+      message: "Lead updated successfully",
+      updatedSubmission
+    });
+  } catch (error) {
+    console.error("Error updating contact submission:", error);
+    res.status(500).json({ error: "Failed to update lead" });
+  }
+};
+
+
 export const contactus = async (req, res) => {
     try {
         const { name, lastname, email, phoneCountryCode, phoneNumber, services, message } = req.body;

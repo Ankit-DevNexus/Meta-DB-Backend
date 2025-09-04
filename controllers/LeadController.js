@@ -44,6 +44,7 @@ export const createLead = async (req, res) => {
       message: "Lead created successfully",
       lead: savedLead
     });
+    
 
   } catch (error) {
     return res.status(500).json({
@@ -174,48 +175,6 @@ export const updateLeads = async (req, res) => {
   }
 };
 
-// export const updateLead = async (req, res) => {
-//   try {
-//     const leadId = req.params.id;
-
-//     // Extract all updatable fields
-//     const {
-//       name, email, phone, city,
-//       requirement, assignedTo, assignedDate, status
-//     } = req.body;
-
-
-//     // Build update object
-//     const updateData = {
-//       ...(name && { name }),
-//       ...(email && { email }),
-//       ...(phone && { phone }),
-//       ...(city && { city }),
-//       ...(requirement && { requirement }),
-//       assignedTo: assignedTo || null,
-//       assignedDate: assignedDate || null,
-//       ...(status && { status })
-//     };
-
-//     const updatedLead = await LeadsModel.findOneAndUpdate(
-//       { _id: leadId },
-//       { $set: updateData },
-//       { new: true, runValidators: true }
-//     );
-
-
-//     if (!updatedLead) {
-//       return res.status(404).json({ message: "Lead not found" });
-//     }
-//     return res.status(200).json({ message: "Lead updated successfully", lead: updatedLead });
-//   } catch (error) {
-//     return res.status(500).json({ message: "Error updating lead", error: error.message });
-//   }
-// };
-
-// get leads from meta APIs
-
-// *************************************************************************
 
 const AD_ACCOUNT_ID = process.env.AD_ACCOUNT_ID;
 const formId = process.env.FORM_ID;

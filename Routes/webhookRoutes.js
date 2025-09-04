@@ -6,11 +6,11 @@ const router = express.Router();
 
 
 router.get('/webhook', webhookFacebookVerification);
+
 router.post('/webhook', webhookLeadsRecevieFromFacebook);
 
 router.get('/user/leads', Authenticate, getAllLeadsForAuthorizeAdmin);
 
 router.patch('/user/leads', Authenticate, updateLeadsComesFromMeta);
-
 
 export default router;

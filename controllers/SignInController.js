@@ -41,7 +41,12 @@ const SignInController = async (req, res) => {
                 //     user: { id: user._id, name: user.name, email: user.email }
                 // });
 
-                res.redirect(`/dashboard?token=${token}`);
+                // res.redirect(`/dashboard?token=${token}`);
+                return res.status(200).json({
+                    message: "Login successful",
+                    token,
+                    user: { id: user._id, name: user.name, email: user.email }
+                });
             }
 
             else {
