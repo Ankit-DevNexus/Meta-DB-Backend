@@ -2,74 +2,108 @@
 // controllers/authUserController.js
 import jwt from "jsonwebtoken";
 import userModel from "../models/user.model.js";
+import mongoose from "mongoose";
+import { ALL_PERMISSIONS } from "../utils/permissions.js";
+
 
 // Generate JWT
 const generateToken = (user) => {
-      //  console.log("id: user._id, email: user.email,name: user.name, role: user.role",id, email, name, role);
-
   return jwt.sign(
     {
       id: user._id,
       email: user.email,
       name: user.name,
-      role: user.role
+      role: user.role,
+      adminId:
+        user.role === "admin"
+          ? user._id.toString()
+          : user.adminId
+          ? user.adminId.toString()
+          : null, // fallback if no admin assigned
     },
     process.env.JWT_SECRET,
     { expiresIn: "1h" }
   );
 };
 
-
-// Signup Controller
 // Signup Controller
 export const signup = async (req, res) => {
   try {
-    const { name, email, phone, password, confirmPassword, role, isActive, lastLogin, adminId } = req.body;
+    const {
+      name,
+      EmpUsername,
+      email,
+      phone,
+      password,
+      confirmPassword,
+      role,
+      isActive,
+      permissions,
+      lastLogin,
+      adminId
+    } = req.body;
 
     if (password !== confirmPassword) {
       return res.status(400).json({ message: "Passwords do not match" });
     }
 
-    // Check for existing email/phone
+    // Check for existing email/phone/EmpUsername
     const existingUser = await userModel.findOne({
       $or: [
-        { email: email },
-        { phone: phone }
+        { email: email?.toLowerCase() },
+        { phone: phone },
+        { EmpUsername: EmpUsername }
       ]
     });
 
     if (existingUser) {
-      return res.status(400).json({ message: "Email or Phone number already exists" });
+      return res.status(400).json({
+        message: existingUser.email === email?.toLowerCase()
+          ? "Email already exists"
+          : existingUser.phone === phone
+          ? "Phone number already exists"
+          : "Employee Username already exists"
+      });
     }
 
     // Decide adminId
     let assignedAdminId = null;
     if (role === "admin") {
-      // Admin’s own id (we’ll assign it after save)
-      assignedAdminId = null;
+      assignedAdminId = null; // will assign after save
     } else {
-      // For normal users, adminId must come from req.user (logged in admin)
       assignedAdminId = adminId || req.user?._id;
       if (!assignedAdminId) {
-        return res.status(400).json({ message: "Admin ID is required for user signup" });
+        return res.status(400).json({
+          message: "Admin ID is required for user signup"
+        });
       }
+    }
+
+    // Permissions handling
+    let finalPermissions = [];
+    if (role === "admin") {
+      finalPermissions = ALL_PERMISSIONS; // Admin gets everything
+    } else {
+      finalPermissions = permissions || []; // User gets limited
     }
 
     // Create user
     const newUser = new userModel({
       name,
+      EmpUsername,
       email,
       phone,
       password,
       role,
       isActive,
       lastLogin,
-      adminId: assignedAdminId
+      adminId: assignedAdminId,
+      permissions: finalPermissions
     });
 
     const savedUser = await newUser.save();
 
-    // If it's an admin, set their own adminId = their id
+    // If it's an admin, assign their own adminId
     if (role === "admin" && !savedUser.adminId) {
       savedUser.adminId = savedUser._id;
       await savedUser.save();
@@ -83,17 +117,17 @@ export const signup = async (req, res) => {
       user: {
         id: savedUser._id,
         name: savedUser.name,
+        EmpUsername: savedUser.EmpUsername,
         email: savedUser.email,
         role: savedUser.role,
-        adminId: savedUser.adminId
+        adminId: savedUser.adminId,
+        permissions: savedUser.permissions
       }
     });
   } catch (err) {
     res.status(500).json({ msg: "Server error", error: err.message });
   }
 };
-
-
 
 // Login Controller
 export const login = async (req, res) => {
@@ -104,7 +138,7 @@ export const login = async (req, res) => {
     if (!isNaN(username)) {
       query = { phone: username };
     } else {
-      query = { email: username.toLowerCase() };
+      query = { email: username.trim().toLowerCase() };
     }
 
     const user = await userModel.findOne(query);
@@ -120,15 +154,21 @@ export const login = async (req, res) => {
     const isMatch = await user.comparePassword(password);
     if (!isMatch) return res.status(401).json({ msg: "Invalid credentials" });
 
-    user.lastLogin = new Date();
 
-    user.loginHistory.push({
-      loginAt: user.lastLogin,
-      ip: req.ip,
-      userAgent: req.headers['user-agent']
-    });
-
-    await user.save();
+    // Replace the save() part with:
+    await userModel.updateOne(
+      { _id: user._id },
+      {
+        $set: { lastLogin: new Date() },
+        $push: {
+          loginHistory: {
+            loginAt: new Date(),
+            ip: req.ip,
+            userAgent: req.headers['user-agent'],
+          },
+        },
+      }
+    );
 
     const token = generateToken(user);
 
@@ -147,40 +187,60 @@ export const login = async (req, res) => {
 
 export const getAllUsers = async (req, res) => {
   try {
-    const users = await userModel.find().select('-password'); // Exclude password field
+    let query = {};
+
+    if (req.user.role === "admin") {
+      // Get only users created by this admin, exclude the admin himself
+      query = {
+        adminId: new mongoose.Types.ObjectId(req.user._id),
+        role: { $ne: "admin" }
+      };
+    } else {
+      // Normal user should not see others (only himself)
+      query = { _id: req.user._id };
+    }
+
+    const users = await userModel.find(query).select("-password"); // Exclude password
 
     res.status(200).json({
-      message: 'All users fetched successfully',
+      message: "All users fetched successfully",
       users,
     });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 
-
-// Update user
+// Update User
 export const updateUser = async (req, res) => {
   try {
-    const { id } = req.params; // user ID to update
-    const { name, email, phone, role, isActive } = req.body;
+    const { id } = req.params;
+
+    // Get allowed schema keys
+    const allowedUpdates = Object.keys(userModel.schema.paths);
+
+    // Filter req.body to only include valid schema fields
+    const updates = {};
+    for (const key of Object.keys(req.body)) {
+      if (allowedUpdates.includes(key)) {
+        updates[key] = req.body[key];
+      }
+    }
 
     const updatedUser = await userModel.findByIdAndUpdate(
       id,
-      { name, email, phone, role, isActive },
-      { new: true, runValidators: true }
+      { $set: updates }, // only update provided fields
+      { new: true } // return updated document
     );
 
     if (!updatedUser) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    res.status(200).json({
-      message: "User updated successfully",
-      user: updatedUser
-    });
-  } catch (error) {
-    res.status(500).json({ message: "Error updating user", error: error.message });
+    res.json(updatedUser);
+  } catch (err) {
+    console.error("Error updating user:", err);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -204,3 +264,63 @@ export const deleteUser = async (req, res) => {
     res.status(500).json({ message: "Error deleting user", error: error.message });
   }
 };
+
+
+// 1
+// Update user
+// export const updateUser = async (req, res) => {
+//   try {
+//     const { id } = req.params; // user ID to update
+//     const { name, email, phone, role, isActive } = req.body;
+
+//     const updatedUser = await userModel.findByIdAndUpdate(
+//       id,
+//       { name, email, phone, role, isActive },
+//       { new: true, runValidators: true }
+//     );
+
+//     if (!updatedUser) {
+//       return res.status(404).json({ message: "User not found" });
+//     }
+
+//     res.status(200).json({
+//       message: "User updated successfully",
+//       user: updatedUser
+//     });
+//   } catch (error) {
+//     res.status(500).json({ message: "Error updating user", error: error.message });
+//   }
+// };
+
+// 2
+// Update user (generic)
+// export const updateUser = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+
+//     // Find user by id
+//     const user = await userModel.findById(id);
+//     if (!user) {
+//       return res.status(404).json({ message: "User not found" });
+//     }
+
+//     // Loop over req.body and only update fields that exist in schema
+//     Object.keys(req.body).forEach((key) => {
+//       if (user[key] !== undefined) {
+//         user[key] = req.body[key];
+//       }
+//     });
+
+//     // Save updated user
+//     const updatedUser = await user.save();
+
+//     res.json({
+//       message: "User updated successfully",
+//       user: updatedUser,
+//     });
+//   } catch (error) {
+//     res.status(500).json({ message: "Error updating user", error: error.message });
+//   }
+// };
+
+// 3

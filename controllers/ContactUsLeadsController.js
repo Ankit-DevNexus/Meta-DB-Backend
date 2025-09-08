@@ -18,6 +18,38 @@ export const getAllContactSubmissions = async (req, res) => {
 };
 
 
+
+export const updateContactSubmissions = async (req, res) => {
+  try {
+    const { ids } = req.body; // Array of Lead IDs
+    const updateData = req.body.updateData; // Fields to update
+
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: "No lead IDs provided" });
+    }
+
+    if (!updateData || Object.keys(updateData).length === 0) {
+      return res.status(400).json({ error: "No update data provided" });
+    }
+
+    const result = await contactUsModel.updateMany(
+      { _id: { $in: ids } },
+      { $set: updateData },
+      { runValidators: true }
+    );
+
+    res.status(200).json({
+      message: "Leads updated successfully",
+      matched: result.matchedCount,
+      modified: result.modifiedCount,
+    });
+  } catch (error) {
+    console.error("Error updating contact submissions:", error);
+    res.status(500).json({ error: "Failed to update leads" });
+  }
+};
+
+
 export const contactus = async (req, res) => {
     try {
         const { name, lastname, email, phoneCountryCode, phoneNumber, services, message } = req.body;

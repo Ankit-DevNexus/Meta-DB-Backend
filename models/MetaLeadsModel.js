@@ -7,6 +7,9 @@ const leadSchema = new mongoose.Schema({
   page_id: String,  
   campaign_name: String,
   field_data: Array,
+  name: String,
+  email: String,
+  phone: String,
   adminId: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // link lead to Admin
   user_email: String,
   assignedTo: { type: String, default: null },

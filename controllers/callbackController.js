@@ -1,13 +1,10 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-import express from "express";
 import axios from "axios";
 import TokenModel from "../models/Token.js";
-import { Authenticate } from '../middleware/authMiddleware.js';
 import userModel from '../models/user.model.js';
 
-const router = express.Router();
 
 const APP_ID = process.env.APP_ID;
 const APP_SECRET = process.env.APP_SECRET;
@@ -15,12 +12,12 @@ const REDIRECT_URI = process.env.REDIRECT_URI;
 
 
 // 1. Start login
-router.get("/facebook/connect", Authenticate, (req, res) => {
+export const connectFacebook =  (req, res) => {
   // req.user is available here because user is logged into your CRM
   const state = req.user.id.toString(); // store crm user id in state
   const authUrl = `https://www.facebook.com/v19.0/dialog/oauth?client_id=${APP_ID}&redirect_uri=${REDIRECT_URI}&scope=pages_show_list,leads_retrieval,ads_read_engagement&state=${state}`;
   res.redirect(authUrl);
-});
+};
 
 // router.get("/facebook/connect", (req, res) => {
 //   const authUrl = `https://www.facebook.com/v19.0/dialog/oauth?client_id=${APP_ID}&redirect_uri=${REDIRECT_URI}&scope=pages_show_list,leads_retrieval,ads_read,pages_read_engagement`;
@@ -29,7 +26,7 @@ router.get("/facebook/connect", Authenticate, (req, res) => {
 
 
 // To get the necessary appId and redirectUri to initialize the Facebook Login SDK on the frontend.
-router.get("/facebook/config", (req, res) => {
+export const facebookConfig = (req, res) => {
   try {
     res.json({
       appId: process.env.APP_ID,
@@ -39,9 +36,9 @@ router.get("/facebook/config", (req, res) => {
     console.error("Error getting Facebook config:", error);
     res.status(500).json({ error: "Unable to get Facebook configuration" });
   }
-});
+};
 
-router.get("/facebook/status", Authenticate, async (req, res) => {
+export const facebookStatus = async (req, res) => {
   try {
     // Check if user has a valid token in database
     const token = await TokenModel.findOne({ crm_user_id: req.user.id });
@@ -55,11 +52,11 @@ router.get("/facebook/status", Authenticate, async (req, res) => {
     console.error("Error checking Facebook status:", error);
     res.status(500).json({ error: "Unable to check connection status" });
   }
-});
+};
 
 
 // 2. Callback after login
-router.get("/facebook/callback", async (req, res) => {
+export const facebookCallback =  async (req, res) => {
   try {
     const { code, state } = req.query; // state = crm_user_id
     
@@ -144,6 +141,5 @@ router.get("/facebook/callback", async (req, res) => {
     console.error("Error in /facebook/callback:", err.response?.data || err.message);
     res.status(500).send("Something went wrong during token processing.");
   }
-});
+};
 
-export default router;

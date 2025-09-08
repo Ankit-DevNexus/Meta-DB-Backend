@@ -6,50 +6,22 @@ import xlsx from "xlsx";
 import LeadsModel from "../models/LeadModel.js";
 import metaAdsLeadsModel from '../models/metaAdsLeadModel.js';
 import { fetchAllLeads } from '../utils/metaLeadUtils.js';
-// import LeadsModelByExcel from "../models/LeadsModelByExcel.js";
-
-
-// const JWT_SECRET = process.env.JWT_SECRET;
-
+import mongoose from 'mongoose';
 
 // create leads manually
 export const createLead = async (req, res) => {
   try {
-    // Step 1: Extract and verify JWT
-    // const authHeader = req.headers.authorization;
-    // if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    //   return res.status(401).json({ message: "Unauthorized: No token provided." });
-    // }
-
-    // const token = authHeader.split(" ")[1];
-    // let decoded;
-
-    // try {
-    //   decoded = jwt.verify(token, JWT_SECRET); // verify tokzsen
-    //   req.user = decoded; // Attach user data to request
-    // } catch (err) {
-    //   return res.status(403).json({ message: "Invalid or expired token." });
-    // }
-
-    // // Step 2: Optional - fetch user if needed
-    // const user = await LeadsModel.findById(decoded.id);
-    // if (!user || !user.isActive) {
-    //   return res.status(401).json({ message: "Unauthorized: User not found or inactive." });
-    // }
-
-    // Step 3: Proceed to lead creation
-
     const {
-      date, name, email, phone, city,
-      budget, requirement, assignedTo, assignedDate, status,
+      name, email, phone, city, budget, requirement,
+      assignedTo, assignedDate, status,
       remarks1, remarks2, source, Campaign,
       ...extraFields
     } = req.body;
 
     const newLead = new LeadsModel({
-      user_id: req.user._id,        // from logged-in user
-      user_email: req.user.email,   // from logged-in user
-      date: date || Date.now(),     // default date
+      adminId: req.user._id,       // logged-in Admin ID
+      user_email: req.user.email,  // logged-in Admin email
+      createdBy: req.user.name,    // logged-in Admin name
       name,
       email,
       phone,
@@ -59,12 +31,11 @@ export const createLead = async (req, res) => {
       source,
       Campaign,
       assignedTo: assignedTo || null,
-      assignedDate: assignedDate || null,
-      status,
+      assignedDate: assignedTo ? assignedDate || new Date() : null,
+      status: status || "new",     // default to new
       remarks1,
       remarks2,
-      createdBy: req.user.name,     // if you want to keep a display name
-      ...extraFields                // allow dynamic fields
+      ...extraFields // dynamic fields
     });
 
     const savedLead = await newLead.save();
@@ -72,12 +43,13 @@ export const createLead = async (req, res) => {
     return res.status(201).json({
       message: "Lead created successfully",
       lead: savedLead
-    })
+    });
+    
 
   } catch (error) {
-    return res.status(500).json({ 
-      message: "Error creating lead", 
-      error: error.message 
+    return res.status(500).json({
+      message: "Error creating lead",
+      error: error.message
     });
   }
 };
@@ -110,68 +82,99 @@ export const uploadLeadsFromExcel = async (req, res) => {
   }
 };
 
-
 // get all leads from created leads 
 export const getAllLeads = async (req, res) => {
   try {
-    const leads = await LeadsModel.find()
-      .select('-source -Campaign') // Exclude these fields
+    let query = {};
+
+    if (req.user.role === "admin") {
+      // Admin sees only his own leads
+      query.adminId = new mongoose.Types.ObjectId(req.user._id);
+    } else if (req.user.role === "user") {
+      // User sees all leads created by their Admin
+      query.adminId = new mongoose.Types.ObjectId(req.user.adminId);
+
+      // uncomment later when assignedTo is ObjectId
+      // query.assignedTo = req.user._id;
+    }
+
+    // console.log("User role:", req.user.role);
+    // console.log("Query adminId:", query.adminId);
+
+    const leads = await LeadsModel.find(query);
 
     return res.status(200).json({
       message: "Leads fetched successfully",
       totalLeads: leads.length,
-      leads: leads
+      leads
     });
   } catch (error) {
-    return res.status(500).json({ message: "Error fetching leads", error: error.message });
+    return res.status(500).json({
+      message: "Error fetching leads",
+      error: error.message
+    });
   }
 };
 
 
-
-export const updateLead = async (req, res) => {
+export const updateLeads = async (req, res) => {
   try {
-    const leadId = req.params.id;
+    let { leadIds, updates } = req.body;
+    // leadIds: array of lead IDs to update
+    // updates: fields to update
 
-    // Extract all updatable fields
-    const {
-      name, email, phone, city,
-      requirement, assignedTo, assignedDate, status
-    } = req.body;
+    if (!Array.isArray(leadIds) || leadIds.length === 0) {
+      return res.status(400).json({ message: "leadIds must be a non-empty array" });
+    }
 
+    // Build base query
+    // let query = {
+    //   _id: { $in: leadIds.map(id => new mongoose.Types.ObjectId(id)) }
+    // };
 
-    // Build update object
-    const updateData = {
-      ...(name && { name }),
-      ...(email && { email }),
-      ...(phone && { phone }),
-      ...(city && { city }),
-      ...(requirement && { requirement }),
-      assignedTo: assignedTo || null,
-      assignedDate: assignedDate || null,
-      ...(status && { status })
-    };
+    // Restrict by role
+    // if (req.user.role === "admin") {
+    //   query.adminId = req.user._id;  // admin can only update his own leads
+    // } else {
+    //   query.adminId = req.user.adminId;   // belongs to parent admin
+    //   query.assignedTo = String(req.user._id); // and must be assigned to this user
+    // }
 
-    const updatedLead = await LeadsModel.findOneAndUpdate(
-      { _id: leadId },
-      { $set: updateData },
-      { new: true, runValidators: true }
+    let query = {};
+    if (req.user.role === "admin") {
+      query.adminId = new mongoose.Types.ObjectId(req.user._id);
+    } else {
+      query.adminId = new mongoose.Types.ObjectId(req.user.adminId);
+      query.assignedTo = String(req.user._id);
+    }
+
+    query._id = { $in: leadIds.map(id => new mongoose.Types.ObjectId(id)) };
+    
+    // Perform update
+    const result = await LeadsModel.updateMany(
+      query,
+      { $set: updates },
+      { new: true }
     );
 
-
-    if (!updatedLead) {
-      return res.status(404).json({ message: "Lead not found" });
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ message: "No matching leads found or permission denied" });
     }
-    ``
-    return res.status(200).json({ message: "Lead updated successfully", lead: updatedLead });
+
+    return res.status(200).json({
+      message: "Leads updated successfully",
+      matched: result.matchedCount,
+      modified: result.modifiedCount
+    });
+
   } catch (error) {
-    return res.status(500).json({ message: "Error updating lead", error: error.message });
+    return res.status(500).json({
+      message: "Error updating leads",
+      error: error.message
+    });
   }
 };
 
-// get leads from meta APIs
-
-// *************************************************************************
 
 const AD_ACCOUNT_ID = process.env.AD_ACCOUNT_ID;
 const formId = process.env.FORM_ID;
@@ -280,7 +283,6 @@ export const getAdsInsights = async (req, res) => {
   // This will only give you ad analytics (clicks, impressions, spend)
   const url = `https://graph.facebook.com/v19.0/${AD_ACCOUNT_ID}/insights?fields=campaign_name,clicks,impressions,spend&access_token=${accessToken}`;
 
-
   try {
     const response = await fetch(url);
     const data = await response.json();
@@ -297,7 +299,5 @@ export const getAdsInsights = async (req, res) => {
 }
 
 // *************************************************************************
-
-
 
 

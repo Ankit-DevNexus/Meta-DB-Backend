@@ -1,17 +1,16 @@
 import express from 'express'
-import { DashboardController } from '../controllers/DashboardController.js';
 import { deleteUser, getAllUsers, login, signup, updateUser } from '../controllers/authUserContoller.js';
-import { createLead, fetchAndSaveNewLeads,  getAdsInsights, getAllLeads, getAllLeadsFromDB, updateLead, uploadLeadsFromExcel } from '../controllers/LeadController.js';
+import { createLead, fetchAndSaveNewLeads,  getAdsInsights, getAllLeads, getAllLeadsFromDB, updateLeads, uploadLeadsFromExcel } from '../controllers/LeadController.js';
 import upload from '../middleware/multerMiddleware.js';
 import { Authenticate, authorize } from '../middleware/authMiddleware.js';
 import { getUserLoginHistory } from '../controllers/UserLoginHistoryController.js';
-import { contactus, getAllContactSubmissions } from '../controllers/ContactUsLeadsController.js';
+import { contactus, getAllContactSubmissions, updateContactSubmissions } from '../controllers/ContactUsLeadsController.js';
 import { forgotPassword, resetPassword } from '../controllers/ForgetPasswordController.js';
+import { createAppointment, getAppointments } from '../controllers/AppointmentController.js';
+import { DashboardController } from '../controllers/DashboardController.js';
 import { SignInController } from '../controllers/SignInController.js';
 
 const router = express.Router();
-
-
 
 // const clientId = process.env.APP_ID;
 // const redirectUri = process.env.REDIRECT_URI;
@@ -32,25 +31,25 @@ router.get('/dashboard', DashboardController);
 router.get('/forgot-password', forgotPassword);
 router.post('/forgot-password', forgotPassword);
 
-router.post('/reset-password/:token', resetPassword);
-router.post('/reset-password/:token', resetPassword);
+router.get('/reset-password/:token', resetPassword);
+router.post("/reset-password/:token", resetPassword);
 
 // sign up and login routes
 router.post('/auth/api/signup-users', signup);
 router.post('/auth/api/signin-users', login);
 
-router.get('/auth/api/get-all-users',   getAllUsers);
-router.put('/auth/api/update-user/:id',   updateUser);
-router.delete('/auth/api/delete-user/:id',   deleteUser);
+router.get('/auth/api/get-all-users', Authenticate, getAllUsers);
+router.put('/auth/api/update-user/:id', updateUser);
+router.delete('/auth/api/delete-user/:id', deleteUser);
 
 
 // create and get Leads
 router.post('/auth/api/Add-leads', Authenticate, createLead);
-router.get('/auth/api/get-all-leads', getAllLeads);
+router.get('/auth/api/get-all-leads', Authenticate, getAllLeads);
 router.post("/auth/api/upload-excel-leads", Authenticate, upload.single("file"), uploadLeadsFromExcel);
 
 // update leads 
-router.patch("/auth/api/get-all-leads/edit/:id",  updateLead);
+router.patch("/auth/api/get-all-leads", Authenticate, updateLeads);
 
 // get login history
 // router.get('/auth/api/user-login-history', authorize('admin'), getUserLoginHistory);
@@ -65,8 +64,9 @@ router.get('/auth/api/meta-ads/insights', getAdsInsights);
 router.get('/auth/api/contact', getAllContactSubmissions);
 
 router.post('/auth/api/contact', contactus);
+router.patch('/auth/api/contact', updateContactSubmissions);
+
+router.post("/auth/api/appointment", createAppointment);   // Create new appointment
+router.get("/auth/api/appointment", getAppointments);      // Get all appointments
 
 export default router;
-
-
-

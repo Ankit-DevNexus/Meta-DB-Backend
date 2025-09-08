@@ -5,7 +5,7 @@
 export const saveFacebookConnection = async (req, res) => {
   try {
     const { pages } = req.body; // [{pageId, pageName, accessToken}]
-    const userId = req.user.id;
+    const userId = req.user._id;
 
     const user = await userModel.findById(userId);
     if (!user || user.role !== "admin") {

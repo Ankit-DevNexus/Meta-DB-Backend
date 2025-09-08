@@ -1,10 +1,15 @@
-// models/UserModel.js
+// models/User.model.js
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
 
 const userSchema = new mongoose.Schema({
   name: String,
-  email: { type: String, unique: true },
+  EmpUsername: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  email: { type: String, unique: true, lowercase: true, trim: true },
   phone: {
     type: String,
     unique: true
@@ -12,6 +17,18 @@ const userSchema = new mongoose.Schema({
   password: String,
   role: { type: String, enum: ['admin', 'user'], default: 'admin' },
   adminId: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // link User to Admin
+  permissions: [
+    {
+      label: { type: String, required: true },
+      path: { type: String, required: true },
+      children: [
+        {
+          label: { type: String, required: true },
+          path: { type: String, required: true }
+        }
+      ]
+    }
+  ],
   facebookPages: [ // store connected FB pages for Admin
     {
       pageId: String,
@@ -37,7 +54,6 @@ userSchema.pre("save", async function (next) {
   this.password = await bcrypt.hash(this.password, salt);
   next();
 });
-
 
 // Compare password
 userSchema.methods.comparePassword = async function (password) {

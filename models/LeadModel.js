@@ -1,37 +1,28 @@
+// models/LeadsModel.js
 import mongoose from "mongoose";
 
 const leadSchema = new mongoose.Schema({
-  user_id: {
+  adminId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true
   },
   user_email: {
     type: String,
     required: true
   },
+  createdBy: String, // admin name
   date: {
     type: Date,
     default: Date.now
   },
-  name: {
-    type: String
-  },
-  email: {
-    type: String
-  },
-  phone: {
-    type: String
-  },
-  city: {
-    type: String
-  },
-  budget: {
-    type: String
-  },
-  requirement: {
-    type: String
-  },
+  name: String,
+  email: String,
+  phone: String,
+  city: String,
+  budget: String,
+  requirement: String,
+  source: String,
+  Campaign: String,
   assignedTo: {
     type: String,
     default: null
@@ -41,27 +32,19 @@ const leadSchema = new mongoose.Schema({
     default: null
   },
   status: {
-    type: String
+    type: String,
+    default: "new"
   },
-  remarks1: {
-    type: String
-  },
-  remarks2: {
-    type: String
-  },
-  source: {
-    type: String
-  },
-  Campaign: {
-    type: String
-  },
-  createdBy: {
-    type: String
-  }
+  tags: [String],
+  remarks1: String,
+  remarks2: String,
 }, {
   timestamps: true,
-  strict: false // allows dynamic fields to be stored as top-level fields (like as static fields)
+  strict: false // allow dynamic fields
 });
 
 const LeadsModel = mongoose.model("Lead", leadSchema);
 export default LeadsModel;
+
+
+
