@@ -7,7 +7,10 @@ export const googleLoginRoute = (req, res) => {
   const url = oAuth2Client.generateAuthUrl({
     access_type: "offline",
     prompt: "consent", // ensures refresh_token is returned
-    scope: ["https://www.googleapis.com/auth/calendar.events"],
+    scope: [
+      "https://www.googleapis.com/auth/calendar.events",
+      "https://www.googleapis.com/auth/userinfo.email",
+    ],
   });
   res.redirect(url);
 };
@@ -27,11 +30,13 @@ export const googleCallback = async (req, res) => {
       { email: data.email },
       {
         googleId: data.id,
-        accessToken: tokens.access_token,
-        refreshToken: tokens.refresh_token, // important for reuse
-        tokenExpiryDate: tokens.expiry_date
-          ? new Date(tokens.expiry_date)
-          : null,
+        googleTokens: {
+          access_token: tokens.access_token,
+          refresh_token: tokens.refresh_token,
+          scope: tokens.scope,
+          token_type: tokens.token_type,
+          expiry_date: tokens.expiry_date,
+        },
       },
       { upsert: true, new: true }
     );
