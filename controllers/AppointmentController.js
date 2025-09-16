@@ -1,15 +1,14 @@
 // controllers/appointmentController.js
-
 import { google } from "googleapis";
 import AppointmentModel from "../models/bookingAppointmentModel.js";
-import oAuth2Client from '../utils/googleClient.js'
-
+import { getAuthorizedClient } from "../utils/googleClient.js"; //  import
 
 // Create Appointment
 export const createAppointment = async (req, res) => {
   try {
     const { userId, title, description, attendees, start, end } = req.body;
 
+    // Get OAuth client for this user
     const authClient = await getAuthorizedClient(userId);
     const calendar = google.calendar({ version: "v3", auth: authClient });
 
