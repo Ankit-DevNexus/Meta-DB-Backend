@@ -1,11 +1,12 @@
-import { google } from 'googleapis';
-import userModel from '../models/user.model.js';
-import oAuth2Client from '../utils/googleClient.js'
+import { google } from "googleapis";
+import userModel from "../models/user.model.js";
+import oAuth2Client from "../utils/googleClient.js";
 
 // Step 1: Google Login Route
 export const googleLoginRoute = (req, res) => {
   const url = oAuth2Client.generateAuthUrl({
     access_type: "offline",
+    prompt: "consent", // ensures refresh_token is returned
     scope: ["https://www.googleapis.com/auth/calendar.events"],
   });
   res.redirect(url);
@@ -28,7 +29,9 @@ export const googleCallback = async (req, res) => {
         googleId: data.id,
         accessToken: tokens.access_token,
         refreshToken: tokens.refresh_token, // important for reuse
-        tokenExpiryDate: tokens.expiry_date ? new Date(tokens.expiry_date) : null,
+        tokenExpiryDate: tokens.expiry_date
+          ? new Date(tokens.expiry_date)
+          : null,
       },
       { upsert: true, new: true }
     );

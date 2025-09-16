@@ -2,50 +2,64 @@
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
 
-const userSchema = new mongoose.Schema({
-  name: String,
-  EmpUsername: {
-    type: String,
-    required: true,
-    unique: true
+const userSchema = new mongoose.Schema(
+  {
+    name: String,
+    EmpUsername: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    email: { type: String, unique: true, lowercase: true, trim: true },
+    phone: {
+      type: String,
+      unique: true,
+    },
+    password: String,
+    role: { type: String, enum: ["admin", "user"], default: "admin" },
+    adminId: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // link User to Admin
+    permissions: [
+      {
+        label: { type: String, required: true },
+        path: { type: String, required: true },
+        children: [
+          {
+            label: { type: String, required: true },
+            path: { type: String, required: true },
+          },
+        ],
+      },
+    ],
+    facebookPages: [
+      // store connected FB pages for Admin
+      {
+        pageId: String,
+        pageName: String,
+        accessToken: String,
+      },
+    ],
+    isActive: { type: Boolean, default: true },
+    lastLogin: { type: Date, default: Date.now },
+    loginHistory: [
+      {
+        loginAt: { type: Date, default: Date.now },
+        ip: String,
+        userAgent: String,
+      },
+    ],
+    googleTokens: {
+      access_token: String,
+      refresh_token: String,
+      scope: String,
+      token_type: String,
+      expiry_date: Number,
+    },
+
+    resetPasswordToken: String,
+    resetPasswordExpires: Date,
   },
-  email: { type: String, unique: true, lowercase: true, trim: true },
-  phone: {
-    type: String,
-    unique: true
-  },
-  password: String,
-  role: { type: String, enum: ['admin', 'user'], default: 'admin' },
-  adminId: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // link User to Admin
-  permissions: [
-    {
-      label: { type: String, required: true },
-      path: { type: String, required: true },
-      children: [
-        {
-          label: { type: String, required: true },
-          path: { type: String, required: true }
-        }
-      ]
-    }
-  ],
-  facebookPages: [ // store connected FB pages for Admin
-    {
-      pageId: String,
-      pageName: String,
-      accessToken: String
-    }
-  ],
-  isActive: { type: Boolean, default: true },
-  lastLogin: { type: Date, default: Date.now },
-  loginHistory: [{
-    loginAt: { type: Date, default: Date.now },
-    ip: String,
-    userAgent: String
-  }],
-  resetPasswordToken: String,
-  resetPasswordExpires: Date,
-}, { timestamps: true });
+  { timestamps: true }
+);
 
 // Hash password before saving
 userSchema.pre("save", async function (next) {
@@ -60,5 +74,5 @@ userSchema.methods.comparePassword = async function (password) {
   return await bcrypt.compare(password, this.password);
 };
 
-const userModel = mongoose.model("User", userSchema)
+const userModel = mongoose.model("User", userSchema);
 export default userModel;
