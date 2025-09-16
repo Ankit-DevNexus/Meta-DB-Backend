@@ -9,6 +9,7 @@ import { forgotPassword, resetPassword } from '../controllers/ForgetPasswordCont
 import { createAppointment, getAppointments } from '../controllers/AppointmentController.js';
 import { DashboardController } from '../controllers/DashboardController.js';
 import { SignInController } from '../controllers/SignInController.js';
+import { googleCallback, googleLoginRoute } from '../controllers/OAuthGoogleController.js';
 
 const router = express.Router();
 
@@ -39,7 +40,7 @@ router.post('/auth/api/signup-users', signup);
 router.post('/auth/api/signin-users', login);
 
 router.get('/auth/api/get-all-users', Authenticate, getAllUsers);
-router.put('/auth/api/update-user/:id', updateUser);
+router.patch('/auth/api/update-user/:id', updateUser);
 router.delete('/auth/api/delete-user/:id', deleteUser);
 
 
@@ -68,5 +69,10 @@ router.patch('/auth/api/contact', updateContactSubmissions);
 
 router.post("/auth/api/appointment", createAppointment);   // Create new appointment
 router.get("/auth/api/appointment", getAppointments);      // Get all appointments
+
+
+// OAuth callback
+router.get('/auth/google', googleLoginRoute);
+router.post('/auth/google/callback', googleCallback);
 
 export default router;

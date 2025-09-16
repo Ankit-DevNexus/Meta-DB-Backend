@@ -10,6 +10,7 @@ import { fileURLToPath } from 'url';
 import cors from 'cors';
 import webhookRoutes from './Routes/webhookRoutes.js'
 import callback from './Routes/CallbackRoute.js';
+import bodyParser from 'body-parser';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -28,6 +29,7 @@ const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:5174',
   'http://localhost:3001',
+  "https://meta-testing-2-hfi6.vercel.app"
 ];
 
 app.use(cors({
@@ -44,7 +46,7 @@ app.use(cors({
 // Add this line to parse JSON bodies
 app.use(express.json()); 
 app.use(express.urlencoded({ extended: true }));
-
+app.use(bodyParser.json());
 
 //view engine 
 app.set('view engine', 'ejs');

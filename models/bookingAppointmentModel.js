@@ -1,15 +1,16 @@
 // models/AppointmentModel.js
 import mongoose from "mongoose";
 
-const AppointmentSchema = new mongoose.Schema({
-    title: { type: String, required: true },
-    date: { type: Date, required: true }, // Use Date type
-    time: { type: String, required: true }, // Keep as string (e.g. "10:30 AM")
-    duration: { type: String, required: true },
-    description: { type: String },
-    email: [{ type: String, required: true }]
-}, { timestamps: true });
+// Appointment Schema
+const appointmentSchema = new mongoose.Schema({
+  title: String,
+  description: String,
+  attendees: [String],
+  start: Date,
+  end: Date,
+  meetLink: String,
+  googleEventId: String,
+});
 
-const AppointmentModel = mongoose.model('Appointment', AppointmentSchema);
-
+const AppointmentModel = mongoose.model("Appointment", appointmentSchema);
 export default AppointmentModel;
