@@ -9,6 +9,8 @@ const oAuth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_REDIRECT_URI
 );
 
+// console.log("process.env.GOOGLE_REDIRECT_URI", process.env.GOOGLE_REDIRECT_URI);
+
 // Helper: get authorized client for a user
 export const getAuthorizedClient = async (userId) => {
   const user = await userModel.findById(userId);

@@ -15,7 +15,10 @@ export const createAppointment = async (req, res) => {
     const event = {
       summary: title,
       description,
-      start: { dateTime: new Date(start).toISOString(), timeZone: "Asia/Kolkata" },
+      start: {
+        dateTime: new Date(start).toISOString(),
+        timeZone: "Asia/Kolkata",
+      },
       end: { dateTime: new Date(end).toISOString(), timeZone: "Asia/Kolkata" },
       attendees: attendees.map((email) => ({ email })),
       conferenceData: {
@@ -54,13 +57,14 @@ export const createAppointment = async (req, res) => {
   }
 };
 
-
 // Fetch All Appointments
 export const getAppointments = async (req, res) => {
-    try {
-        const appointments = await AppointmentModel.find().sort({ date: 1 });
-        res.status(200).json(appointments);
-    } catch (error) {
-        res.status(500).json({ message: "Error fetching appointments", error: error.message });
-    }
+  try {
+    const appointments = await AppointmentModel.find().sort({ date: 1 });
+    res.status(200).json(appointments);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error fetching appointments", error: error.message });
+  }
 };
