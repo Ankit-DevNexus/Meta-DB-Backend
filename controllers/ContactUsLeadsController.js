@@ -18,7 +18,6 @@ export const getAllContactSubmissions = async (req, res) => {
 };
 
 
-
 export const updateContactSubmissions = async (req, res) => {
   try {
     const { ids } = req.body; // Array of Lead IDs

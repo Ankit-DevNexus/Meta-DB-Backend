@@ -1,10 +1,8 @@
-
 // controllers/authUserController.js
 import jwt from "jsonwebtoken";
 import userModel from "../models/user.model.js";
 import mongoose from "mongoose";
 import { ALL_PERMISSIONS } from "../utils/permissions.js";
-
 
 // Generate JWT
 const generateToken = (user) => {
@@ -40,7 +38,7 @@ export const signup = async (req, res) => {
       isActive,
       permissions,
       lastLogin,
-      adminId
+      adminId,
     } = req.body;
 
     if (password !== confirmPassword) {
@@ -52,17 +50,18 @@ export const signup = async (req, res) => {
       $or: [
         { email: email?.toLowerCase() },
         { phone: phone },
-        { EmpUsername: EmpUsername }
-      ]
+        { EmpUsername: EmpUsername },
+      ],
     });
 
     if (existingUser) {
       return res.status(400).json({
-        message: existingUser.email === email?.toLowerCase()
-          ? "Email already exists"
-          : existingUser.phone === phone
-          ? "Phone number already exists"
-          : "Employee Username already exists"
+        message:
+          existingUser.email === email?.toLowerCase()
+            ? "Email already exists"
+            : existingUser.phone === phone
+            ? "Phone number already exists"
+            : "Employee Username already exists",
       });
     }
 
@@ -74,7 +73,7 @@ export const signup = async (req, res) => {
       assignedAdminId = adminId || req.user?._id;
       if (!assignedAdminId) {
         return res.status(400).json({
-          message: "Admin ID is required for user signup"
+          message: "Admin ID is required for user signup",
         });
       }
     }
@@ -98,7 +97,7 @@ export const signup = async (req, res) => {
       isActive,
       lastLogin,
       adminId: assignedAdminId,
-      permissions: finalPermissions
+      permissions: finalPermissions,
     });
 
     const savedUser = await newUser.save();
@@ -121,8 +120,8 @@ export const signup = async (req, res) => {
         email: savedUser.email,
         role: savedUser.role,
         adminId: savedUser.adminId,
-        permissions: savedUser.permissions
-      }
+        permissions: savedUser.permissions,
+      },
     });
   } catch (err) {
     res.status(500).json({ msg: "Server error", error: err.message });
@@ -144,7 +143,9 @@ export const login = async (req, res) => {
     const user = await userModel.findOne(query);
 
     if (!user || !user.isActive)
-      return res.status(400).json({ msg: "Invalid username or account disabled" });
+      return res
+        .status(400)
+        .json({ msg: "Invalid username or account disabled" });
 
     // Validate role
     if (role && user.role !== role) {
@@ -153,7 +154,6 @@ export const login = async (req, res) => {
 
     const isMatch = await user.comparePassword(password);
     if (!isMatch) return res.status(401).json({ msg: "Invalid credentials" });
-
 
     // Replace the save() part with:
     await userModel.updateOne(
@@ -164,7 +164,7 @@ export const login = async (req, res) => {
           loginHistory: {
             loginAt: new Date(),
             ip: req.ip,
-            userAgent: req.headers['user-agent'],
+            userAgent: req.headers["user-agent"],
           },
         },
       }
@@ -176,14 +176,12 @@ export const login = async (req, res) => {
     res.status(200).json({
       message: "Login successful",
       token,
-      user
+      user,
     });
-
   } catch (err) {
     res.status(500).json({ msg: "Server error", error: err.message });
   }
 };
-
 
 export const getAllUsers = async (req, res) => {
   try {
@@ -193,7 +191,7 @@ export const getAllUsers = async (req, res) => {
       // Get only users created by this admin, exclude the admin himself
       query = {
         adminId: new mongoose.Types.ObjectId(req.user._id),
-        role: { $ne: "admin" }
+        role: { $ne: "admin" },
       };
     } else {
       // Normal user should not see others (only himself)
@@ -244,7 +242,6 @@ export const updateUser = async (req, res) => {
   }
 };
 
-
 // Delete user
 export const deleteUser = async (req, res) => {
   try {
@@ -258,13 +255,14 @@ export const deleteUser = async (req, res) => {
 
     res.status(200).json({
       message: "User deleted successfully",
-      user: deletedUser
+      user: deletedUser,
     });
   } catch (error) {
-    res.status(500).json({ message: "Error deleting user", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Error deleting user", error: error.message });
   }
 };
-
 
 // 1
 // Update user
