@@ -11,7 +11,7 @@ import cors from "cors";
 import webhookRoutes from "./Routes/webhookRoutes.js";
 import callback from "./Routes/CallbackRoute.js";
 import bodyParser from "body-parser";
-
+import googleROutes from "./Routes/googleRoutes.js";
 const app = express();
 const PORT = process.env.PORT || 3001;
 const DASHBOARD_DB_URI = process.env.DASHBOARD_DB_URI;
@@ -75,6 +75,7 @@ app.use(
 app.use("/", Routes);
 app.use("/", webhookRoutes);
 app.use("/", callback);
+app.use("/", googleROutes);
 
 app.listen(PORT, () => {
   console.log(`Server is listening on http://localhost:${PORT}`);
