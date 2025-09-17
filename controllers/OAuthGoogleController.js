@@ -45,6 +45,8 @@ export const googleCallback = async (req, res) => {
     const { code, state } = req.query; // state carries your Admin ID
     const adminId = state; // this is the Admin ID from CRM
 
+    console.log("adminId", adminId);
+
     const { tokens } = await oAuth2Client.getToken(code);
     oAuth2Client.setCredentials(tokens);
 
