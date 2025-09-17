@@ -33,10 +33,6 @@ import {
 } from "../controllers/AppointmentController.js";
 import { DashboardController } from "../controllers/DashboardController.js";
 import { SignInController } from "../controllers/SignInController.js";
-import {
-  googleCallback,
-  googleLoginRoute,
-} from "../controllers/OAuthGoogleController.js";
 
 const router = express.Router();
 
@@ -100,9 +96,5 @@ router.patch("/auth/api/contact", updateContactSubmissions);
 
 router.post("/auth/api/appointment", createAppointment); // Create new appointment
 router.get("/auth/api/appointment", Authenticate, getAppointments); // Get all appointments
-
-// OAuth callback
-router.get("/auth/google", googleLoginRoute);
-router.get("/auth/google/callback", googleCallback);
 
 export default router;

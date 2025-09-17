@@ -19,7 +19,6 @@ import jwt from "jsonwebtoken";
 //   });
 //   res.redirect(url);
 // };
-
 export const googleLoginRoute = (req, res) => {
   const adminId = req.user._id.toString(); // or however you store Admin login info
 
@@ -44,6 +43,8 @@ export const googleCallback = async (req, res) => {
   try {
     const { code, state } = req.query; // state carries your Admin ID
     const adminId = state; // this is the Admin ID from CRM
+
+    console.log("adminId", adminId);
 
     const { tokens } = await oAuth2Client.getToken(code);
     oAuth2Client.setCredentials(tokens);
