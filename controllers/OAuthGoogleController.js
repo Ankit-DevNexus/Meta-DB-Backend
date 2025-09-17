@@ -19,7 +19,6 @@ import jwt from "jsonwebtoken";
 //   });
 //   res.redirect(url);
 // };
-
 export const googleLoginRoute = (req, res) => {
   const adminId = req.user._id.toString(); // or however you store Admin login info
 
