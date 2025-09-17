@@ -9,10 +9,8 @@ const oAuth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_REDIRECT_URI
 );
 
-console.log("CLIENT_ID:", process.env.GOOGLE_CLIENT_ID);
-console.log("REDIRECT_URI:", process.env.GOOGLE_REDIRECT_URI);
-
-// console.log("process.env.GOOGLE_REDIRECT_URI", process.env.GOOGLE_REDIRECT_URI);
+// console.log("CLIENT_ID:", process.env.GOOGLE_CLIENT_ID);
+// console.log("REDIRECT_URI:", process.env.GOOGLE_REDIRECT_URI);
 
 // Helper: get authorized client for a user
 export const getAuthorizedClient = async (userId) => {
@@ -23,6 +21,7 @@ export const getAuthorizedClient = async (userId) => {
   }
 
   oAuth2Client.setCredentials({
+    access_token: user.googleTokens.access_token,
     refresh_token: user.googleTokens.refresh_token,
   });
 

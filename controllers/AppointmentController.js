@@ -10,6 +10,8 @@ export const createAppointment = async (req, res) => {
 
     // Get OAuth client for this user
     const authClient = await getAuthorizedClient(userId);
+    console.log("authClient", authClient);
+
     const calendar = google.calendar({ version: "v3", auth: authClient });
 
     const event = {
@@ -23,7 +25,7 @@ export const createAppointment = async (req, res) => {
       attendees: attendees.map((email) => ({ email })),
       conferenceData: {
         createRequest: {
-          requestId: `crm-meeting-${Date.now()}`,
+          requestId: `meeting-${Date.now()}`,
           conferenceSolutionKey: { type: "hangoutsMeet" },
         },
       },

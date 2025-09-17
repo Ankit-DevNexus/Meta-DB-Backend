@@ -8,8 +8,11 @@ export const googleLoginRoute = (req, res) => {
     access_type: "offline",
     prompt: "consent", // ensures refresh_token is returned
     scope: [
-      "https://www.googleapis.com/auth/calendar.events",
-      "https://www.googleapis.com/auth/userinfo.email",
+      "profile",
+      "email",
+      "https://www.googleapis.com/auth/calendar", // read/write calendar
+      "https://www.googleapis.com/auth/calendar.events", // manage events
+      "https://www.googleapis.com/auth/calendar.events.readonly",
     ],
   });
   res.redirect(url);
@@ -40,8 +43,11 @@ export const googleCallback = async (req, res) => {
       },
       { upsert: true, new: true }
     );
-
-    res.send("Google Calendar connected. You can now create events.");
+    // redirect to frontend with token
+    res.redirect(
+      `https://meta-testing-3.vercel.app/admin-dashboard/appointments?email=${data.email}`
+    );
+    // res.send("Google Calendar connected. You can now create events.");
   } catch (err) {
     console.error("OAuth callback error:", err);
     res.status(500).send("Google authentication failed.");
