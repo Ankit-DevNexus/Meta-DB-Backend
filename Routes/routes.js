@@ -99,7 +99,7 @@ router.post("/auth/api/contact", contactus);
 router.patch("/auth/api/contact", updateContactSubmissions);
 
 router.post("/auth/api/appointment", createAppointment); // Create new appointment
-router.get("/auth/api/appointment", getAppointments); // Get all appointments
+router.get("/auth/api/appointment", Authenticate, getAppointments); // Get all appointments
 
 // OAuth callback
 router.get("/auth/google", googleLoginRoute);

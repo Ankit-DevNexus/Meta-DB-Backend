@@ -14,6 +14,7 @@ export const googleLoginRoute = (req, res) => {
       "https://www.googleapis.com/auth/calendar.events", // manage events
       "https://www.googleapis.com/auth/calendar.events.readonly",
     ],
+    state: adminId, // pass your CRM's Admin ID here
   });
   res.redirect(url);
 };
@@ -21,17 +22,21 @@ export const googleLoginRoute = (req, res) => {
 // Step 2: OAuth Callback
 export const googleCallback = async (req, res) => {
   try {
-    const { code } = req.query;
+    const { code, state } = req.query; // state carries your Admin ID
+    const adminId = state; // your CRM Admin ID
+
     const { tokens } = await oAuth2Client.getToken(code);
     oAuth2Client.setCredentials(tokens);
 
-    // get user info
+    // get Google user profile
     const oauth2 = google.oauth2({ auth: oAuth2Client, version: "v2" });
     const { data } = await oauth2.userinfo.get();
 
-    await userModel.findOneAndUpdate(
+    // Save Google account + tokens linked to Admin ID
+    let user = await userModel.findOneAndUpdate(
       { email: data.email },
       {
+        adminId, // save Admin ID here
         googleId: data.id,
         googleTokens: {
           access_token: tokens.access_token,
@@ -43,11 +48,22 @@ export const googleCallback = async (req, res) => {
       },
       { upsert: true, new: true }
     );
-    // redirect to frontend with token
-    res.redirect(
-      `https://meta-testing-3.vercel.app/admin-dashboard/appointments?email=${data.email}`
-    );
-    // res.send("Google Calendar connected. You can now create events.");
+
+    // Create JWT for your app
+    const jwtPayload = {
+      id: user._id,
+      email: user.email,
+      adminId: user.adminId,
+    };
+    const jwtToken = jwt.sign(jwtPayload, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    });
+
+    res.json({
+      message: "Google account connected",
+      token: jwtToken,
+      user: { id: user._id, email: user.email, adminId: user.adminId },
+    });
   } catch (err) {
     console.error("OAuth callback error:", err);
     res.status(500).send("Google authentication failed.");
