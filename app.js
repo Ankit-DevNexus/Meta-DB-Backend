@@ -36,15 +36,21 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (allowedOrigins.includes(origin) || !origin) {
+      // allow requests with no origin (like mobile apps, Postman, curl)
+      if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
-        callback(new Error("Not allowed by CORS"));
+        callback(new Error("Not allowed by CORS: " + origin));
       }
     },
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // allow preflight
+    allowedHeaders: ["Content-Type", "Authorization"], // allow custom headers
     credentials: true,
   })
 );
+
+// Handle preflight OPTIONS requests for all routes
+app.options("*", cors());
 
 // Add this line to parse JSON bodies
 app.use(express.json());
