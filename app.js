@@ -77,6 +77,7 @@ app.use("/", Routes);
 app.use("/", webhookRoutes);
 app.use("/", callback);
 app.use("/", googleROutes);
+app.use("/", calendarRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is listening on http://localhost:${PORT}`);

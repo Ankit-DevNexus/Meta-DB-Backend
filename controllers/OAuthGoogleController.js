@@ -3,22 +3,6 @@ import userModel from "../models/user.model.js";
 import oAuth2Client from "../utils/googleClient.js";
 import jwt from "jsonwebtoken";
 
-// Step 1: Google Login Route
-// export const googleLoginRoute = (req, res) => {
-//   const url = oAuth2Client.generateAuthUrl({
-//     access_type: "offline",
-//     prompt: "consent", // ensures refresh_token is returned
-//     scope: [
-//       "profile",
-//       "email",
-//       "https://www.googleapis.com/auth/calendar", // read/write calendar
-//       "https://www.googleapis.com/auth/calendar.events", // manage events
-//       "https://www.googleapis.com/auth/calendar.events.readonly",
-//     ],
-//     state: adminId, // pass your CRM's Admin ID here
-//   });
-//   res.redirect(url);
-// };
 export const googleLoginRoute = (req, res) => {
   const adminId = req.user._id.toString(); // or however you store Admin login info
 
