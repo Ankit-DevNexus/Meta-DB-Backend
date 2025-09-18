@@ -30,7 +30,6 @@ export const googleLoginRoute = (req, res) => {
       "email",
       "https://www.googleapis.com/auth/calendar",
       "https://www.googleapis.com/auth/calendar.events",
-      "https://www.googleapis.com/auth/calendar.events.readonly",
     ],
     state: adminId, // Now defined
   });
@@ -46,6 +45,7 @@ export const googleCallback = async (req, res) => {
 
     console.log("adminId", adminId);
 
+    // Exchange code for tokens
     const { tokens } = await oAuth2Client.getToken(code);
     oAuth2Client.setCredentials(tokens);
 
@@ -80,11 +80,14 @@ export const googleCallback = async (req, res) => {
       expiresIn: "1h",
     });
 
-    res.json({
-      message: "Google account connected",
-      token: jwtToken,
-      user: { id: user._id, email: user.email, adminId: user.adminId },
-    });
+    res.redirect(
+      `https://meta-testing-3.vercel.app/admin-dashboard?token=${jwtToken}`
+    );
+    // res.json({
+    //   message: "Google account connected",
+    //   token: jwtToken,
+    //   user: { id: user._id, email: user.email, adminId: user.adminId },
+    // });
   } catch (err) {
     console.error("OAuth callback error:", err);
     res.status(500).send("Google authentication failed.");
