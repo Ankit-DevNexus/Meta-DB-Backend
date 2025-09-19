@@ -12,9 +12,10 @@ import webhookRoutes from "./Routes/webhookRoutes.js";
 import callback from "./Routes/CallbackRoute.js";
 import bodyParser from "body-parser";
 import googleRoutes from "./Routes/googleRoutes.js";
-import calendarRoutes from "./Routes/CalenderRoutes.js";
+import calendarRoutes from "./Routes/CalendarRoutes.js";
 import authRoutes from "./Routes/authRoutes.js";
 import OrganisationRoutes from "./Routes/organisationRoutes.js";
+
 const app = express();
 const PORT = process.env.PORT || 3001;
 const DASHBOARD_DB_URI = process.env.DASHBOARD_DB_URI;

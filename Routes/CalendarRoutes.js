@@ -3,8 +3,7 @@ import { Authenticate } from "../middleware/authMiddleware.js";
 import {
   CalendarEvents,
   getCalendarEvents,
-} from "../controllers/CalenderController.js";
-
+} from "../controllers/CalendarController.js";
 const router = express.Router();
 
 // OAuth callback
