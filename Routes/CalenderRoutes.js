@@ -8,7 +8,7 @@ import {
 const router = express.Router();
 
 // OAuth callback
-router.get("/events/all", Authenticate, getCalendarEvents);
-router.post("/events", Authenticate, CalendarEvents);
+router.get("/calendar/events/all", Authenticate, getCalendarEvents);
+router.post("/calendar/events", Authenticate, CalendarEvents);
 
 export default router;

@@ -14,7 +14,7 @@ import bodyParser from "body-parser";
 import googleRoutes from "./Routes/googleRoutes.js";
 import calendarRoutes from "./Routes/CalenderRoutes.js";
 import authRoutes from "./Routes/authRoutes.js";
-
+import OrganisationRoutes from "./Routes/organisationRoutes.js";
 const app = express();
 const PORT = process.env.PORT || 3001;
 const DASHBOARD_DB_URI = process.env.DASHBOARD_DB_URI;
@@ -77,17 +77,14 @@ app.get("/", (req, res) => {
   res.send("API is running...");
 });
 
-// ------------------ ROUTES ------------------
+// ROUTES
+app.use("/", OrganisationRoutes);
 app.use("/", authRoutes);
 app.use("/", Routes);
 app.use("/", webhookRoutes);
 app.use("/", callback);
 app.use("/", googleRoutes);
-
-// Mount calendar routes under /calendar
-// Example: GET /calendar/events/all
-app.use("/calendar", calendarRoutes);
-// ------------------------------------------------
+app.use("/", calendarRoutes);
 
 // Start server
 app.listen(PORT, () => {
