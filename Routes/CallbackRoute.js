@@ -1,6 +1,11 @@
 import express from "express";
-import { Authenticate } from '../middleware/authMiddleware.js';
-import { connectFacebook, facebookCallback, facebookConfig, facebookStatus } from "../controllers/callbackController.js";
+import { Authenticate } from "../middleware/authMiddleware.js";
+import {
+  connectFacebook,
+  facebookCallback,
+  facebookConfig,
+  facebookStatus,
+} from "../controllers/callbackController.js";
 
 const router = express.Router();
 

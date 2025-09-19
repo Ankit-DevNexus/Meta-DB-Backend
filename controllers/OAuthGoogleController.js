@@ -3,22 +3,6 @@ import userModel from "../models/user.model.js";
 import oAuth2Client from "../utils/googleClient.js";
 import jwt from "jsonwebtoken";
 
-// Step 1: Google Login Route
-// export const googleLoginRoute = (req, res) => {
-//   const url = oAuth2Client.generateAuthUrl({
-//     access_type: "offline",
-//     prompt: "consent", // ensures refresh_token is returned
-//     scope: [
-//       "profile",
-//       "email",
-//       "https://www.googleapis.com/auth/calendar", // read/write calendar
-//       "https://www.googleapis.com/auth/calendar.events", // manage events
-//       "https://www.googleapis.com/auth/calendar.events.readonly",
-//     ],
-//     state: adminId, // pass your CRM's Admin ID here
-//   });
-//   res.redirect(url);
-// };
 export const googleLoginRoute = (req, res) => {
   const adminId = req.user._id.toString(); // or however you store Admin login info
 
@@ -30,7 +14,6 @@ export const googleLoginRoute = (req, res) => {
       "email",
       "https://www.googleapis.com/auth/calendar",
       "https://www.googleapis.com/auth/calendar.events",
-      "https://www.googleapis.com/auth/calendar.events.readonly",
     ],
     state: adminId, // Now defined
   });
@@ -46,6 +29,7 @@ export const googleCallback = async (req, res) => {
 
     console.log("adminId", adminId);
 
+    // Exchange code for tokens
     const { tokens } = await oAuth2Client.getToken(code);
     oAuth2Client.setCredentials(tokens);
 
@@ -80,11 +64,14 @@ export const googleCallback = async (req, res) => {
       expiresIn: "1h",
     });
 
-    res.json({
-      message: "Google account connected",
-      token: jwtToken,
-      user: { id: user._id, email: user.email, adminId: user.adminId },
-    });
+    res.redirect(
+      `https://meta-testing-3.vercel.app/admin-dashboard?token=${jwtToken}`
+    );
+    // res.json({
+    //   message: "Google account connected",
+    //   token: jwtToken,
+    //   user: { id: user._id, email: user.email, adminId: user.adminId },
+    // });
   } catch (err) {
     console.error("OAuth callback error:", err);
     res.status(500).send("Google authentication failed.");

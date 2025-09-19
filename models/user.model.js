@@ -9,6 +9,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
+      sparse: true, // allows multiple docs with null
     },
     email: { type: String, unique: true, lowercase: true, trim: true },
     phone: {
@@ -17,7 +18,6 @@ const userSchema = new mongoose.Schema(
     },
     password: String,
     role: { type: String, enum: ["admin", "user"], default: "admin" },
-    adminId: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // link User to Admin
     permissions: [
       {
         label: { type: String, required: true },
@@ -30,6 +30,11 @@ const userSchema = new mongoose.Schema(
         ],
       },
     ],
+    organisationId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Organization",
+    },
+    adminId: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // link User to Admin
     facebookPages: [
       // store connected FB pages for Admin
       {

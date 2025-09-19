@@ -1,18 +1,16 @@
-import dotenv from 'dotenv';
+import dotenv from "dotenv";
 dotenv.config();
 
 import axios from "axios";
 import TokenModel from "../models/Token.js";
-import userModel from '../models/user.model.js';
-
+import userModel from "../models/user.model.js";
 
 const APP_ID = process.env.APP_ID;
 const APP_SECRET = process.env.APP_SECRET;
 const REDIRECT_URI = process.env.REDIRECT_URI;
 
-
 // 1. Start login
-export const connectFacebook =  (req, res) => {
+export const connectFacebook = (req, res) => {
   // req.user is available here because user is logged into your CRM
   const state = req.user.id.toString(); // store crm user id in state
   const authUrl = `https://www.facebook.com/v19.0/dialog/oauth?client_id=${APP_ID}&redirect_uri=${REDIRECT_URI}&scope=pages_show_list,leads_retrieval,ads_read_engagement&state=${state}`;
@@ -24,13 +22,12 @@ export const connectFacebook =  (req, res) => {
 //   res.redirect(authUrl);
 // });
 
-
 // To get the necessary appId and redirectUri to initialize the Facebook Login SDK on the frontend.
 export const facebookConfig = (req, res) => {
   try {
     res.json({
       appId: process.env.APP_ID,
-      redirectUri: process.env.REDIRECT_URI
+      redirectUri: process.env.REDIRECT_URI,
     });
   } catch (error) {
     console.error("Error getting Facebook config:", error);
@@ -54,17 +51,16 @@ export const facebookStatus = async (req, res) => {
   }
 };
 
-
 // 2. Callback after login
-export const facebookCallback =  async (req, res) => {
+export const facebookCallback = async (req, res) => {
   try {
     const { code, state } = req.query; // state = crm_user_id
-    
+
     if (!code) return res.status(400).send("Missing code parameter");
     if (!state || state === "unknown") {
       return res.status(400).send("Invalid user state parameter");
     }
-    
+
     // Get user info from database
     const user = await userModel.findById(state);
     if (!user) {
@@ -72,36 +68,43 @@ export const facebookCallback =  async (req, res) => {
     }
 
     // Step 1: Exchange code for short-lived token
-    const shortTokenRes = await axios.get("https://graph.facebook.com/v19.0/oauth/access_token", {
-      params: {
-        client_id: APP_ID,
-        redirect_uri: REDIRECT_URI,
-        client_secret: APP_SECRET,
-        code,
-      },
-    });
+    const shortTokenRes = await axios.get(
+      "https://graph.facebook.com/v19.0/oauth/access_token",
+      {
+        params: {
+          client_id: APP_ID,
+          redirect_uri: REDIRECT_URI,
+          client_secret: APP_SECRET,
+          code,
+        },
+      }
+    );
 
     const shortToken = shortTokenRes.data.access_token;
 
     // Step 2: Exchange for long-lived token
-    const longTokenRes = await axios.get("https://graph.facebook.com/v19.0/oauth/access_token", {
-      params: {
-        grant_type: "fb_exchange_token",
-        client_id: APP_ID,
-        client_secret: APP_SECRET,
-        fb_exchange_token: shortToken,
-      },
-    });
+    const longTokenRes = await axios.get(
+      "https://graph.facebook.com/v19.0/oauth/access_token",
+      {
+        params: {
+          grant_type: "fb_exchange_token",
+          client_id: APP_ID,
+          client_secret: APP_SECRET,
+          fb_exchange_token: shortToken,
+        },
+      }
+    );
 
     const longToken = longTokenRes.data.access_token;
 
     // Step 3: Get managed pages
-    const pageRes = await axios.get(`https://graph.facebook.com/v19.0/me/accounts?access_token=${longToken}`);
+    const pageRes = await axios.get(
+      `https://graph.facebook.com/v19.0/me/accounts?access_token=${longToken}`
+    );
     const pages = pageRes.data.data || [];
 
     // Delete existing tokens for this user to avoid duplicates
     await TokenModel.deleteMany({ crm_user_id: state });
-
 
     for (const page of pages) {
       await TokenModel.create({
@@ -124,7 +127,9 @@ export const facebookCallback =  async (req, res) => {
             },
           }
         );
-        console.log(`Subscribed to leadgen for page: ${page.name} (id: ${page.id})`);
+        console.log(
+          `Subscribed to leadgen for page: ${page.name} (id: ${page.id})`
+        );
       } catch (subscribeErr) {
         console.error(
           `Failed to subscribe ${page.name}:`,
@@ -135,11 +140,14 @@ export const facebookCallback =  async (req, res) => {
 
     // res.redirect("/dashboard?fb_connected=1");
     // Redirect to the correct frontend URL instead of /dashboard
-    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+    const frontendUrl =
+      process.env.FRONTEND_URL || "https://meta-testing-3.vercel.app";
     res.redirect(`${frontendUrl}/admin-dashboard?fb_connected=1`);
   } catch (err) {
-    console.error("Error in /facebook/callback:", err.response?.data || err.message);
+    console.error(
+      "Error in /facebook/callback:",
+      err.response?.data || err.message
+    );
     res.status(500).send("Something went wrong during token processing.");
   }
 };
-
