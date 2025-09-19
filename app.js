@@ -13,6 +13,7 @@ import callback from "./Routes/CallbackRoute.js";
 import bodyParser from "body-parser";
 import googleRoutes from "./Routes/googleRoutes.js";
 import calendarRoutes from "./Routes/CalenderRoutes.js";
+import authRoutes from "./Routes/authRoutes.js";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -49,10 +50,6 @@ app.use(
   })
 );
 
-// Handle preflight OPTIONS requests for all routes
-app.options("*", cors());
-// --------------------------------------------------
-
 // Parse request body
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -77,10 +74,11 @@ app.use(
 
 // Health check route
 app.get("/", (req, res) => {
-  res.send("API is running 🚀");
+  res.send("API is running...");
 });
 
 // ------------------ ROUTES ------------------
+app.use("/", authRoutes);
 app.use("/", Routes);
 app.use("/", webhookRoutes);
 app.use("/", callback);

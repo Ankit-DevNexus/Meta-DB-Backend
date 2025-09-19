@@ -2,8 +2,7 @@ import crypto from "crypto";
 import { sendEmail } from "../utils/SendEmail.js";
 import userModel from "../models/user.model.js";
 
-const CLIENT_URL =
-  process.env.CLIENT_URL || "https://meta-testing-3.vercel.app";
+const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
 
 export const forgotPassword = async (req, res) => {
   if (req.method === "GET") {

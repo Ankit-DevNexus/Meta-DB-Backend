@@ -12,7 +12,6 @@ import upload from "../middleware/multerMiddleware.js";
 import { Authenticate } from "../middleware/authMiddleware.js";
 import { getUserLoginHistory } from "../controllers/UserLoginHistoryController.js";
 import {
-  contactus,
   getAllContactSubmissions,
   updateContactSubmissions,
 } from "../controllers/ContactUsLeadsController.js";
@@ -20,10 +19,10 @@ import {
   forgotPassword,
   resetPassword,
 } from "../controllers/ForgetPasswordController.js";
-import {
-  createAppointment,
-  getAppointments,
-} from "../controllers/AppointmentController.js";
+// import {
+//   createAppointment,
+//   getAppointments,
+// } from "../controllers/AppointmentController.js";
 import { DashboardController } from "../controllers/DashboardController.js";
 
 const router = express.Router();
@@ -35,6 +34,11 @@ router.post("/forgot-password", forgotPassword);
 
 router.get("/reset-password/:token", resetPassword);
 router.post("/reset-password/:token", resetPassword);
+
+// get contact us leads from website
+router.get("/auth/api/contact", getAllContactSubmissions);
+// router.post("/auth/api/contact", contactus);
+router.patch("/auth/api/contact", updateContactSubmissions);
 
 // create and get Leads
 router.post("/auth/api/Add-leads", Authenticate, createLead);
@@ -59,12 +63,7 @@ router.get("/auth/api/meta-ads/all-leads", getAllLeadsFromDB);
 
 router.get("/auth/api/meta-ads/insights", getAdsInsights);
 
-router.get("/auth/api/contact", getAllContactSubmissions);
-
-router.post("/auth/api/contact", contactus);
-router.patch("/auth/api/contact", updateContactSubmissions);
-
-router.post("/auth/api/appointment", createAppointment); // Create new appointment
-router.get("/auth/api/appointment", Authenticate, getAppointments); // Get all appointments
+// router.post("/auth/api/appointment", createAppointment); // Create new appointment
+// router.get("/auth/api/appointment", Authenticate, getAppointments); // Get all appointments
 
 export default router;
