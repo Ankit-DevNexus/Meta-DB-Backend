@@ -3,12 +3,12 @@ import { Authenticate } from "../middleware/authMiddleware.js";
 import {
   CalendarEvents,
   getCalendarEvents,
-} from "../controllers/calenderController.js";
+} from "../controllers/CalenderController.js";
 
 const router = express.Router();
 
 // OAuth callback
-router.get("/calendar/events", Authenticate, getCalendarEvents);
-router.get("/calendar/events", Authenticate, CalendarEvents);
+router.get("/events/all", Authenticate, getCalendarEvents);
+router.post("/events", Authenticate, CalendarEvents);
 
 export default router;

@@ -1,4 +1,6 @@
-// GET /calendar/events
+import { getAuthorizedClient } from "../utils/googleClient.js";
+import { google } from "googleapis";
+
 export const getCalendarEvents = async (req, res) => {
   try {
     const authClient = await getAuthorizedClient(req.user.id);
@@ -19,10 +21,10 @@ export const getCalendarEvents = async (req, res) => {
   }
 };
 
-// POST /calendar/events
 export const CalendarEvents = async (req, res) => {
   try {
     const authClient = await getAuthorizedClient(req.user.id);
+    console.log("authClient", authClient);
 
     const calendar = google.calendar({ version: "v3", auth: authClient });
 

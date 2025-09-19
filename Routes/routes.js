@@ -1,12 +1,5 @@
 import express from "express";
 import {
-  deleteUser,
-  getAllUsers,
-  login,
-  signup,
-  updateUser,
-} from "../controllers/authUserContoller.js";
-import {
   createLead,
   fetchAndSaveNewLeads,
   getAdsInsights,
@@ -16,7 +9,7 @@ import {
   uploadLeadsFromExcel,
 } from "../controllers/LeadController.js";
 import upload from "../middleware/multerMiddleware.js";
-import { Authenticate, authorize } from "../middleware/authMiddleware.js";
+import { Authenticate } from "../middleware/authMiddleware.js";
 import { getUserLoginHistory } from "../controllers/UserLoginHistoryController.js";
 import {
   contactus,
@@ -32,23 +25,8 @@ import {
   getAppointments,
 } from "../controllers/AppointmentController.js";
 import { DashboardController } from "../controllers/DashboardController.js";
-import { SignInController } from "../controllers/SignInController.js";
 
 const router = express.Router();
-
-// const clientId = process.env.APP_ID;
-// const redirectUri = process.env.REDIRECT_URI;
-
-// router.get("/facebook", (req, res) => {
-//     // const facebookAuthUrl = `https://www.facebook.com/v19.0/dialog/oauth?client_id=${APP_ID}&redirect_uri=${REDIRECT_URI}&scope=pages_show_list,leads_retrieval,ads_management&response_type=code`;
-
-//   const fbLoginUrl = `https://www.facebook.com/v19.0/dialog/oauth?client_id=${clientId}&redirect_uri=${redirectUri}&scope=pages_show_list,ads_management,leads_retrieval`;
-//   res.redirect(fbLoginUrl);
-// });
-
-//  for ejs login
-router.get("/", SignInController);
-router.post("/", SignInController);
 
 router.get("/dashboard", DashboardController);
 
@@ -57,14 +35,6 @@ router.post("/forgot-password", forgotPassword);
 
 router.get("/reset-password/:token", resetPassword);
 router.post("/reset-password/:token", resetPassword);
-
-// sign up and login routes
-router.post("/auth/api/signup-users", signup);
-router.post("/auth/api/signin-users", login);
-
-router.get("/auth/api/get-all-users", Authenticate, getAllUsers);
-router.patch("/auth/api/update-user/:id", updateUser);
-router.delete("/auth/api/delete-user/:id", deleteUser);
 
 // create and get Leads
 router.post("/auth/api/Add-leads", Authenticate, createLead);
