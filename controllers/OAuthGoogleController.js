@@ -1,25 +1,69 @@
 import { google } from "googleapis";
 import userModel from "../models/user.model.js";
-import oAuth2Client from "../utils/googleClient.js";
+import { OAuth2Client } from "google-auth-library";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 
-export const googleLoginRoute = (req, res) => {
-  const adminId = req.user._id.toString(); // or however you store Admin login info
+const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+const client = new OAuth2Client(CLIENT_ID);
 
-  const url = oAuth2Client.generateAuthUrl({
-    access_type: "offline",
-    prompt: "consent",
-    scope: [
-      "profile",
-      "email",
-      "https://www.googleapis.com/auth/calendar",
-      "https://www.googleapis.com/auth/calendar.events",
-    ],
-    state: adminId, // Now defined
-  });
+export const googleLoginRoute = async (req, res) => {
+  try {
+    const { token } = req.body; // access_token from frontend
+    if (!token) return res.status(400).send("Missing token");
 
-  res.redirect(url);
+    // Verify token with Google
+    const ticket = await client.getTokenInfo(token);
+    const { email, name, sub: googleId } = ticket;
+
+    // Save or update user
+    const user = await userModel.findOneAndUpdate(
+      { email },
+      {
+        $setOnInsert: {
+          name,
+          EmpUsername: email.split("@")[0],
+          password: "google_oauth_dummy",
+          role: "admin",
+        },
+        $set: {
+          googleId,
+        },
+      },
+      { upsert: true, new: true }
+    );
+
+    // Issue your JWT
+    const jwtToken = jwt.sign(
+      { id: user._id, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
+
+    res.json({ user: { name: user.name, email: user.email }, token: jwtToken });
+  } catch (err) {
+    console.error("Google login error:", err);
+    res.status(500).send("Authentication failed");
+  }
 };
+
+// export const googleLoginRoute = (req, res) => {
+//   const adminId = req.user._id.toString(); // or however you store Admin login info
+
+//   const url = oAuth2Client.generateAuthUrl({
+//     access_type: "offline",
+//     prompt: "consent",
+//     scope: [
+//       "profile",
+//       "email",
+//       "https://www.googleapis.com/auth/calendar",
+//       "https://www.googleapis.com/auth/calendar.events",
+//     ],
+//     state: adminId, // Now defined
+//   });
+
+//   res.redirect(url);
+// };
 
 // Step 2: OAuth Callback
 export const googleCallback = async (req, res) => {
