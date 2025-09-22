@@ -11,7 +11,6 @@
 //   created_at: { type: Date, default: Date.now }
 // });
 
-
 // const contactUsModel = mongoose.model('Contactus' , ContactusSchema);
 
 // export default contactUsModel;
@@ -27,7 +26,7 @@ const ContactusSchema = new mongoose.Schema({
   phoneNumber: { type: String, required: true },
   services: { type: String, required: true },
   message: { type: String },
-  created_at: { type: Date, default: Date.now }
+  created_at: { type: Date, default: Date.now },
 });
 
 // Create cached variable to avoid redefining

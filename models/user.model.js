@@ -7,7 +7,6 @@ const userSchema = new mongoose.Schema(
     name: String,
     EmpUsername: {
       type: String,
-      required: true,
       unique: true,
       sparse: true, // allows multiple docs with null
     },
@@ -20,12 +19,12 @@ const userSchema = new mongoose.Schema(
     role: { type: String, enum: ["admin", "user"], default: "admin" },
     permissions: [
       {
-        label: { type: String, required: true },
-        path: { type: String, required: true },
+        label: { type: String },
+        path: { type: String },
         children: [
           {
-            label: { type: String, required: true },
-            path: { type: String, required: true },
+            label: { type: String },
+            path: { type: String },
           },
         ],
       },
@@ -52,6 +51,7 @@ const userSchema = new mongoose.Schema(
         userAgent: String,
       },
     ],
+    googleId: { type: String, unique: true },
     googleTokens: {
       access_token: String,
       refresh_token: String,
