@@ -1,4 +1,3 @@
-import nodemailer from "nodemailer";
 import { getContactUsModel } from "../models/ContactusModel.js";
 
 const contactUsModel = await getContactUsModel();

@@ -33,6 +33,7 @@ const allowedOrigins = [
   "http://localhost:5174",
   "http://localhost:3001",
   "https://meta-testing-3.vercel.app",
+  "http://194.238.18.1",
 ];
 
 app.use(
