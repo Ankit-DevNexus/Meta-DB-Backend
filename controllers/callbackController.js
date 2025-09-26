@@ -18,11 +18,6 @@ export const connectFacebook = (req, res) => {
   res.redirect(authUrl);
 };
 
-// router.get("/facebook/connect", (req, res) => {
-//   const authUrl = `https://www.facebook.com/v19.0/dialog/oauth?client_id=${APP_ID}&redirect_uri=${REDIRECT_URI}&scope=pages_show_list,leads_retrieval,ads_read,pages_read_engagement`;
-//   res.redirect(authUrl);
-// });
-
 // To get the necessary appId and redirectUri to initialize the Facebook Login SDK on the frontend.
 export const facebookConfig = (req, res) => {
   try {
@@ -111,7 +106,7 @@ export const facebookCallback = async (req, res) => {
     console.log("Cleared existing tokens");
 
     for (const page of pages) {
-      await TokenModel.create({
+      const newToken = await TokenModel.create({
         crm_user_id: state, // <-- FIX: use state, not req.user
         page_id: page.id,
         page_name: page.name,
