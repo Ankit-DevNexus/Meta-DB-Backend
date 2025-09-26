@@ -20,7 +20,7 @@ const generateToken = (user) => {
           : null, // fallback if no admin assigned
     },
     process.env.JWT_SECRET,
-    { expiresIn: "1h" }
+    { expiresIn: process.env.SECRET_EXPIRY || "30d" }
   );
 };
 

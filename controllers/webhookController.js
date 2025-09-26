@@ -24,7 +24,6 @@ export const webhookFacebookVerification = (req, res) => {
 
 // Webhook endpoint to receive Meta (Facebook) leads
 export const webhookLeadsRecevieFromFacebook = async (req, res) => {
-  console.log("Webhook POST received");
   console.log("Webhook POST received:", JSON.stringify(req.body, null, 2));
 
   try {
@@ -91,6 +90,7 @@ export const webhookLeadsRecevieFromFacebook = async (req, res) => {
 
           // show which URL we’re calling
           const url = `https://graph.facebook.com/v19.0/${leadgen_id}?access_token=${tokenData.page_access_token}`;
+
           console.log("Fetching lead from:", url);
 
           try {
@@ -111,6 +111,8 @@ export const webhookLeadsRecevieFromFacebook = async (req, res) => {
             // Try to fetch campaign name (if ad_id exists)
             if (lead.ad_id) {
               try {
+                console.log(`Fetching ad details for ad_id: ${lead.ad_id}`);
+
                 const adDetails = await axios.get(
                   `https://graph.facebook.com/v19.0/${lead.ad_id}?fields=campaign_id&access_token=${tokenData.page_access_token}`
                 );
@@ -134,32 +136,6 @@ export const webhookLeadsRecevieFromFacebook = async (req, res) => {
                 );
               }
             }
-
-            // FIXED: Find admin using crm_user_id from token
-            // const admin = await userModel.findById(
-            //   new mongoose.Types.ObjectId(tokenData.crm_user_id)
-            // );
-
-            // if (!admin) {
-            //   console.error(
-            //     `Admin not found for crm_user_id: ${tokenData.crm_user_id}`
-            //   );
-            //   continue;
-            // }
-
-            // console.log("✓ Admin found:", admin.email);
-
-            // // Find which Admin owns this page (from user collection)
-            // const admin = await userModel.findOne({
-            //   "facebookPages.pageId": pageId,
-            // });
-
-            // console.log("admin:", admin);
-
-            // if (!admin) {
-            //   console.warn(`No admin found for pageId: ${pageId}`);
-            //   continue;
-            // }
 
             // Extract these fields (name, email, phone, etc.)
             const name =

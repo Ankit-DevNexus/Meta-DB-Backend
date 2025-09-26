@@ -138,16 +138,15 @@ export const facebookCallback = async (req, res) => {
         );
       }
     }
-
     console.log("Facebook connection completed successfully");
 
     // res.redirect("/dashboard?fb_connected=1");
     // Redirect to the correct frontend URL instead of /dashboard
     const frontendUrl =
-      process.env.FRONTEND_URL || "http://localhost:5173/admin-dashboard";
+      process.env.FRONTEND_URL || "https://meta-testing-3.vercel.app";
     res.redirect(`${frontendUrl}/admin-dashboard?fb_connected=1`);
   } catch (err) {
-    console.error("❌ Error in Facebook callback:");
+    console.error("Error in Facebook callback:");
     console.error("Error message:", err.message);
     console.error("Response data:", err.response?.data);
     console.error("Full error:", err);
