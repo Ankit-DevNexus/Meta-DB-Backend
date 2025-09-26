@@ -14,13 +14,9 @@ export const connectFacebook = (req, res) => {
   // req.user is available here because user is logged into your CRM
   const state = req.user.id.toString(); // store crm user id in state
   const authUrl = `https://www.facebook.com/v19.0/dialog/oauth?client_id=${APP_ID}&redirect_uri=${REDIRECT_URI}&scope=pages_show_list,leads_retrieval,ads_read_engagement&state=${state}`;
+  console.log("Redirecting to Facebook auth:", authUrl);
   res.redirect(authUrl);
 };
-
-// router.get("/facebook/connect", (req, res) => {
-//   const authUrl = `https://www.facebook.com/v19.0/dialog/oauth?client_id=${APP_ID}&redirect_uri=${REDIRECT_URI}&scope=pages_show_list,leads_retrieval,ads_read,pages_read_engagement`;
-//   res.redirect(authUrl);
-// });
 
 // To get the necessary appId and redirectUri to initialize the Facebook Login SDK on the frontend.
 export const facebookConfig = (req, res) => {
@@ -55,17 +51,16 @@ export const facebookStatus = async (req, res) => {
 export const facebookCallback = async (req, res) => {
   try {
     const { code, state } = req.query; // state = crm_user_id
+    console.log("Callback received - Code:", code ? "✓" : "✗", "State:", state);
 
     if (!code) return res.status(400).send("Missing code parameter");
-    if (!state || state === "unknown") {
-      return res.status(400).send("Invalid user state parameter");
-    }
+    if (!state) return res.status(400).send("Invalid user state parameter");
 
-    // Get user info from database
     const user = await userModel.findById(state);
-    if (!user) {
-      return res.status(404).send("User not found");
-    }
+    if (!user) return res.status(404).send("User not found");
+
+    console.log("User found:", user.email);
+    console.log("Exchanging code for access token...");
 
     // Step 1: Exchange code for short-lived token
     const shortTokenRes = await axios.get(
@@ -79,7 +74,7 @@ export const facebookCallback = async (req, res) => {
         },
       }
     );
-
+    console.log("Short token response:", shortTokenRes.data);
     const shortToken = shortTokenRes.data.access_token;
 
     // Step 2: Exchange for long-lived token
@@ -96,25 +91,31 @@ export const facebookCallback = async (req, res) => {
     );
 
     const longToken = longTokenRes.data.access_token;
+    const expiresIn = longTokenRes.data.expires_in;
+    console.log("Long-lived token obtained, expires in:", expiresIn, "seconds");
 
     // Step 3: Get managed pages
     const pageRes = await axios.get(
       `https://graph.facebook.com/v19.0/me/accounts?access_token=${longToken}`
     );
     const pages = pageRes.data.data || [];
+    console.log(`Found ${pages.length} pages for user`);
 
     // Delete existing tokens for this user to avoid duplicates
     await TokenModel.deleteMany({ crm_user_id: state });
+    console.log("Cleared existing tokens");
 
     for (const page of pages) {
-      await TokenModel.create({
+      const newToken = await TokenModel.create({
         crm_user_id: state, // <-- FIX: use state, not req.user
         page_id: page.id,
         page_name: page.name,
         page_access_token: page.access_token,
         user_access_token: longToken,
         token_created_at: new Date(),
+        user_email: user.email, // Add this
       });
+      console.log(`Token stored for page: ${page.name} (ID: ${newToken._id})`);
 
       try {
         await axios.post(
@@ -137,6 +138,7 @@ export const facebookCallback = async (req, res) => {
         );
       }
     }
+    console.log("Facebook connection completed successfully");
 
     // res.redirect("/dashboard?fb_connected=1");
     // Redirect to the correct frontend URL instead of /dashboard
@@ -144,10 +146,12 @@ export const facebookCallback = async (req, res) => {
       process.env.FRONTEND_URL || "https://meta-testing-3.vercel.app";
     res.redirect(`${frontendUrl}/admin-dashboard?fb_connected=1`);
   } catch (err) {
-    console.error(
-      "Error in /facebook/callback:",
-      err.response?.data || err.message
-    );
-    res.status(500).send("Something went wrong during token processing.");
+    console.error("Error in Facebook callback:");
+    console.error("Error message:", err.message);
+    console.error("Response data:", err.response?.data);
+    console.error("Full error:", err);
+
+    const errorMessage = err.response?.data?.error?.message || err.message;
+    res.status(500).send(`Facebook authentication failed: ${errorMessage}`);
   }
 };
