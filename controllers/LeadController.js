@@ -1,27 +1,36 @@
-
-import dotenv from 'dotenv';
+import dotenv from "dotenv";
 dotenv.config();
 
 import xlsx from "xlsx";
 import LeadsModel from "../models/LeadModel.js";
-import metaAdsLeadsModel from '../models/metaAdsLeadModel.js';
-import { fetchAllLeads } from '../utils/metaLeadUtils.js';
-import mongoose from 'mongoose';
+import metaAdsLeadsModel from "../models/metaAdsLeadModel.js";
+import { fetchAllLeads } from "../utils/metaLeadUtils.js";
+import mongoose from "mongoose";
 
 // create leads manually
 export const createLead = async (req, res) => {
   try {
     const {
-      name, email, phone, city, budget, requirement,
-      assignedTo, assignedDate, status,
-      remarks1, remarks2, source, Campaign,
+      name,
+      email,
+      phone,
+      city,
+      budget,
+      requirement,
+      assignedTo,
+      assignedDate,
+      status,
+      remarks1,
+      remarks2,
+      source,
+      Campaign,
       ...extraFields
     } = req.body;
 
     const newLead = new LeadsModel({
-      adminId: req.user._id,       // logged-in Admin ID
-      user_email: req.user.email,  // logged-in Admin email
-      createdBy: req.user.name,    // logged-in Admin name
+      adminId: req.user._id, // logged-in Admin ID
+      user_email: req.user.email, // logged-in Admin email
+      createdBy: req.user.name, // logged-in Admin name
       name,
       email,
       phone,
@@ -32,28 +41,25 @@ export const createLead = async (req, res) => {
       Campaign,
       assignedTo: assignedTo || null,
       assignedDate: assignedTo ? assignedDate || new Date() : null,
-      status: status || "new",     // default to new
+      status: status || "new", // default to new
       remarks1,
       remarks2,
-      ...extraFields // dynamic fields
+      ...extraFields, // dynamic fields
     });
 
     const savedLead = await newLead.save();
 
     return res.status(201).json({
       message: "Lead created successfully",
-      lead: savedLead
+      lead: savedLead,
     });
-    
-
   } catch (error) {
     return res.status(500).json({
       message: "Error creating lead",
-      error: error.message
+      error: error.message,
     });
   }
 };
-
 
 // create leads via .csv and excel
 export const uploadLeadsFromExcel = async (req, res) => {
@@ -68,21 +74,28 @@ export const uploadLeadsFromExcel = async (req, res) => {
     const sheet = workbook.Sheets[sheetName];
     const rows = xlsx.utils.sheet_to_json(sheet); // auto handles dynamic headers
 
-    const leads = rows.map(row => ({
+    const leads = rows.map((row) => ({
       ...row,
-      createdBy: req.user?.name || "system"
+      createdBy: req.user?.name || "system",
     }));
 
     const savedLeads = await LeadsModel.insertMany(leads);
 
-    res.status(200).json({ message: "Leads uploaded successfully", count: savedLeads.length });
+    res
+      .status(200)
+      .json({
+        message: "Leads uploaded successfully",
+        count: savedLeads.length,
+      });
   } catch (error) {
     console.error("Excel Upload Error:", error);
-    res.status(500).json({ message: "Failed to upload leads", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Failed to upload leads", error: error.message });
   }
 };
 
-// get all leads from created leads 
+// get all leads from created leads
 export const getAllLeads = async (req, res) => {
   try {
     let query = {};
@@ -106,16 +119,15 @@ export const getAllLeads = async (req, res) => {
     return res.status(200).json({
       message: "Leads fetched successfully",
       totalLeads: leads.length,
-      leads
+      leads,
     });
   } catch (error) {
     return res.status(500).json({
       message: "Error fetching leads",
-      error: error.message
+      error: error.message,
     });
   }
 };
-
 
 export const updateLeads = async (req, res) => {
   try {
@@ -124,7 +136,9 @@ export const updateLeads = async (req, res) => {
     // updates: fields to update
 
     if (!Array.isArray(leadIds) || leadIds.length === 0) {
-      return res.status(400).json({ message: "leadIds must be a non-empty array" });
+      return res
+        .status(400)
+        .json({ message: "leadIds must be a non-empty array" });
     }
 
     // Build base query
@@ -148,8 +162,8 @@ export const updateLeads = async (req, res) => {
       query.assignedTo = String(req.user._id);
     }
 
-    query._id = { $in: leadIds.map(id => new mongoose.Types.ObjectId(id)) };
-    
+    query._id = { $in: leadIds.map((id) => new mongoose.Types.ObjectId(id)) };
+
     // Perform update
     const result = await LeadsModel.updateMany(
       query,
@@ -158,23 +172,23 @@ export const updateLeads = async (req, res) => {
     );
 
     if (result.matchedCount === 0) {
-      return res.status(404).json({ message: "No matching leads found or permission denied" });
+      return res
+        .status(404)
+        .json({ message: "No matching leads found or permission denied" });
     }
 
     return res.status(200).json({
       message: "Leads updated successfully",
       matched: result.matchedCount,
-      modified: result.modifiedCount
+      modified: result.modifiedCount,
     });
-
   } catch (error) {
     return res.status(500).json({
       message: "Error updating leads",
-      error: error.message
+      error: error.message,
     });
   }
 };
-
 
 const AD_ACCOUNT_ID = process.env.AD_ACCOUNT_ID;
 const formId = process.env.FORM_ID;
@@ -184,17 +198,16 @@ export const fetchAndSaveNewLeads = async (req, res) => {
   try {
     const result = await fetchAndSaveLeadsCore();
     res.status(200).json({
-      message: 'Fetched from Meta Ads & saved new leads',
-      ...result
+      message: "Fetched from Meta Ads & saved new leads",
+      ...result,
     });
   } catch (error) {
     res.status(500).json({
-      message: 'Failed to fetch/save Meta leads',
-      error: error.message
+      message: "Failed to fetch/save Meta leads",
+      error: error.message,
     });
   }
 };
-
 
 export const fetchAndSaveLeadsCore = async () => {
   const url = `https://graph.facebook.com/v19.0/${formId}/leads?access_token=${accessToken}`;
@@ -207,12 +220,12 @@ export const fetchAndSaveLeadsCore = async () => {
 
     // Find already-stored leads in MongoDB
     const existingLeads = await metaAdsLeadsModel.find(
-      { lead_id: { $in: allLeads.map(lead => lead.id) } },
+      { lead_id: { $in: allLeads.map((lead) => lead.id) } },
       { lead_id: 1 }
     );
 
     // Adds all existing lead IDs into a Set for quick lookup
-    existingLeads.forEach(lead => existingLeadIds.add(lead.lead_id));
+    existingLeads.forEach((lead) => existingLeadIds.add(lead.lead_id));
 
     const batchSize = 50;
     for (let i = 0; i < allLeads.length; i += batchSize) {
@@ -221,10 +234,9 @@ export const fetchAndSaveLeadsCore = async () => {
 
       for (const lead of batch) {
         if (!existingLeadIds.has(lead.id)) {
-
           const dynamicFields = {};
           if (Array.isArray(lead.field_data)) {
-            lead.field_data.forEach(field => {
+            lead.field_data.forEach((field) => {
               if (field.name && Array.isArray(field.values)) {
                 dynamicFields[field.name] = field.values[0];
               }
@@ -238,16 +250,16 @@ export const fetchAndSaveLeadsCore = async () => {
                 form_id: formId,
                 created_time: new Date(lead.created_time),
                 AllFields: dynamicFields,
-                created_at: new Date()
-              }
-            }
+                created_at: new Date(),
+              },
+            },
           });
         }
       }
 
       if (batchOperations.length > 0) {
         const batchResult = await metaAdsLeadsModel.bulkWrite(batchOperations);
-        savedLeads.push(...batch.map(lead => lead.id));
+        savedLeads.push(...batch.map((lead) => lead.id));
       }
     }
 
@@ -257,29 +269,27 @@ export const fetchAndSaveLeadsCore = async () => {
       savedLeadIds: savedLeads,
     };
   } catch (error) {
-    console.error('fetchAndSaveLeadsCore error:', error.message);
+    console.error("fetchAndSaveLeadsCore error:", error.message);
     throw error;
   }
 };
-
 
 export const getAllLeadsFromDB = async (req, res) => {
   try {
     const leads = await metaAdsLeadsModel.find().sort({ created_time: -1 }); // recent first
     res.status(200).json({
-      message: 'All leads from database',
+      message: "All leads from database",
       total: leads.length,
       leads,
     });
   } catch (error) {
-    console.error('DB Fetch Error:', error.message);
-    res.status(500).json({ error: 'Failed to fetch leads from database' });
+    console.error("DB Fetch Error:", error.message);
+    res.status(500).json({ error: "Failed to fetch leads from database" });
   }
 };
 
 // It will get insights
 export const getAdsInsights = async (req, res) => {
-
   // This will only give you ad analytics (clicks, impressions, spend)
   const url = `https://graph.facebook.com/v19.0/${AD_ACCOUNT_ID}/insights?fields=campaign_name,clicks,impressions,spend&access_token=${accessToken}`;
 
@@ -293,11 +303,9 @@ export const getAdsInsights = async (req, res) => {
 
     res.json(data);
   } catch (error) {
-    console.error('Error fetching Meta Ads data:', error.message);
-    res.status(500).json({ error: 'Failed to fetch Meta Ads data' });
+    console.error("Error fetching Meta Ads data:", error.message);
+    res.status(500).json({ error: "Failed to fetch Meta Ads data" });
   }
-}
+};
 
 // *************************************************************************
-
-

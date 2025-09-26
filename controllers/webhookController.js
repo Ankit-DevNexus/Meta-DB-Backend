@@ -14,153 +14,245 @@ export const webhookFacebookVerification = (req, res) => {
   const challenge = req.query["hub.challenge"];
 
   if (mode === "subscribe" && token === VERIFY_TOKEN) {
-    console.log("Webhook verified");
+    console.log("Webhook verified successfully");
     res.status(200).send(challenge);
   } else {
+    console.log("✗ Webhook verification failed");
     res.sendStatus(403);
   }
 };
 
 // Webhook endpoint to receive Meta (Facebook) leads
 export const webhookLeadsRecevieFromFacebook = async (req, res) => {
-  // console.log("Webhook POST received:", JSON.stringify(req.body, null, 2));
-  const body = req.body;
+  console.log("Webhook POST received");
+  console.log("Webhook POST received:", JSON.stringify(req.body, null, 2));
 
-  // Facebook sends event objects in "page" type
-  if (body.object === "page") {
-    // Loop through all page entries (sometimes multiple events are bundled)
-    for (const entry of body.entry || []) {
-      const pageId = entry.id; // Page ID from which the lead came
-      const changes = entry.changes; // Array of changes (events like leadgen)
+  try {
+    const body = req.body;
+    console.log("Body:", body);
 
-      if (!Array.isArray(changes)) {
-        console.warn("Invalid or missing 'changes' in entry:", entry);
-        continue;
-      }
+    // Facebook sends event objects in "page" type
+    if (body.object === "page") {
+      // Loop through all page entries (sometimes multiple events are bundled)
+      for (const entry of body.entry || []) {
+        const pageId = entry.id; // Page ID from which the lead came
+        const changes = entry.changes; // Array of changes (events like leadgen)
 
-      // Loop through all changes inside the entry
-      for (const change of changes) {
-        // If there's no leadgen_id, skip
-        if (!change?.value?.leadgen_id) {
-          console.warn("Missing leadgen_id in change:", change);
+        console.log(`Processing page: ${pageId}, changes: ${changes.length}`);
+
+        if (!Array.isArray(changes)) {
+          console.warn("Invalid or missing 'changes' in entry:", entry);
           continue;
         }
 
-        const leadgen_id = change.value.leadgen_id; // Unique lead ID from Meta
-        const form_id = change.value.form_id; // Form ID that generated the lead
-        console.log("New Lead from Meta:", leadgen_id);
-
-        // Find stored token for this page (from when admin connected FB page)
-        const tokenData = await TokenModel.findOne({ page_id: pageId });
-        console.log("tokenData", tokenData);
-
-        if (!tokenData) {
-          console.error("Token not found for page:", pageId);
-          continue;
-        }
-
-        // Check if lead already exists (avoid duplicates)
-        const existingLead = await MetaLeadsModel.findOne({ leadgen_id });
-        if (existingLead) {
-          console.log("Lead already exists for user:", tokenData.user_email);
-          continue;
-        }
-
-        // show which URL we’re calling
-        const url = `https://graph.facebook.com/v19.0/${leadgen_id}?access_token=${tokenData.page_access_token}`;
-        console.log("Fetching lead from:", url);
-
-        let campaignName = null;
-
-        try {
-          // Fetch lead details from Facebook API
-          const leadRes = await axios.get(
-            `https://graph.facebook.com/v19.0/${leadgen_id}?fields=ad_id,form_id,field_data,created_time&access_token=${tokenData.page_access_token}`
-          );
-
-          const lead = leadRes.data;
-          console.log(
-            "Lead fetched from Facebook:",
-            JSON.stringify(lead, null, 2)
-          );
-
-          // Try to fetch campaign name (if ad_id exists)
-          if (lead.ad_id) {
-            try {
-              const adDetails = await axios.get(
-                `https://graph.facebook.com/v19.0/${lead.ad_id}?fields=campaign_id&access_token=${tokenData.page_access_token}`
-              );
-
-              const campaignId = adDetails.data.campaign_id;
-
-              const campaignRes = await axios.get(
-                `https://graph.facebook.com/v19.0/${campaignId}?fields=name&access_token=${tokenData.page_access_token}`
-              );
-              campaignName = campaignRes.data.name;
-            } catch (campaignErr) {
-              console.error(
-                "Error fetching campaign details:",
-                campaignErr.message
-              );
-            }
-          }
-
-          // Find which Admin owns this page (from user collection)
-          const admin = await userModel.findOne({
-            "facebookPages.pageId": pageId,
-          });
-          if (!admin) {
-            console.warn(`No admin found for pageId: ${pageId}`);
+        // Loop through all changes inside the entry
+        for (const change of changes) {
+          // If there's no leadgen_id, skip
+          if (!change?.value?.leadgen_id) {
+            console.warn("Missing leadgen_id in change:", change);
             continue;
           }
 
-          // Extract these fields (name, email, phone, etc.)
-          const name =
-            lead.field_data.find((f) => f.name === "full_name")?.values[0] ||
-            null;
-          const email =
-            lead.field_data.find((f) => f.name === "email")?.values[0] || null;
-          const phone =
-            lead.field_data.find((f) => f.name === "phone_number")?.values[0] ||
-            null;
+          const leadgen_id = change.value.leadgen_id; // Unique lead ID from Meta
+          const form_id = change.value.form_id; // Form ID that generated the lead
+          console.log(`New Lead from Meta: ${leadgen_id} for form: ${form_id}`);
 
-          // When webhook receives a lead with page_id, find the Admin who owns that page and assign lead:
-          await MetaLeadsModel.create({
-            leadgen_id,
-            form_id,
-            page_id: pageId,
-            campaign_name: campaignName,
-            field_data: lead.field_data,
-            name,
-            email,
-            phone,
-            adminId: admin._id,
-            user_email: tokenData.user_email, // Store user email
-            assignedTo: null,
-            assignedDate: null,
-            status: "new",
-            tags: [],
-            remarks1: "",
-            remarks2: "",
-          });
+          // Find stored token for this page (from when admin connected FB page)
+          const tokenData = await TokenModel.findOne({ page_id: pageId });
+          console.log("tokenData", tokenData);
 
-          console.log(`New lead saved for user: ${admin.email}`);
-        } catch (err) {
-          console.error("Error fetching lead data:", err.message);
+          if (!tokenData) {
+            console.error("Token not found for page:", pageId);
+            continue;
+          }
+
+          console.log("✓ Token found for page:", tokenData.page_name);
+          console.log("Token user email:", tokenData.user_email);
+
+          // Check if lead already exists (avoid duplicates)
+          const existingLead = await MetaLeadsModel.findOne({ leadgen_id });
+          if (existingLead) {
+            console.log("Lead already exists for user:", tokenData.user_email);
+            continue;
+          }
+
+          // Find admin using crm_user_id from token
+          const admin = await userModel.findById(
+            new mongoose.Types.ObjectId(tokenData.crm_user_id)
+          );
+
+          if (!admin) {
+            console.error(
+              `Admin not found for crm_user_id: ${tokenData.crm_user_id}`
+            );
+            continue;
+          }
+          console.log("✓ Admin found:", admin.email);
+
+          // show which URL we’re calling
+          const url = `https://graph.facebook.com/v19.0/${leadgen_id}?access_token=${tokenData.page_access_token}`;
+          console.log("Fetching lead from:", url);
+
+          try {
+            // Fetch lead details from Facebook API
+            const leadRes = await axios.get(
+              `https://graph.facebook.com/v19.0/${leadgen_id}?fields=ad_id,form_id,field_data,created_time&access_token=${tokenData.page_access_token}`
+            );
+            console.log("leadRes:", leadRes);
+
+            const lead = leadRes.data;
+            console.log(
+              "Lead fetched from Facebook:",
+              JSON.stringify(lead, null, 2)
+            );
+
+            let campaignName = null;
+
+            // Try to fetch campaign name (if ad_id exists)
+            if (lead.ad_id) {
+              try {
+                const adDetails = await axios.get(
+                  `https://graph.facebook.com/v19.0/${lead.ad_id}?fields=campaign_id&access_token=${tokenData.page_access_token}`
+                );
+                console.log("adDetails:", adDetails);
+
+                const campaignId = adDetails.data.campaign_id;
+
+                const campaignRes = await axios.get(
+                  `https://graph.facebook.com/v19.0/${campaignId}?fields=name&access_token=${tokenData.page_access_token}`
+                );
+
+                console.log("campaignRes:", campaignRes);
+
+                campaignName = campaignRes.data.name;
+
+                console.log("✓ Campaign name found:", campaignName);
+              } catch (campaignErr) {
+                console.error(
+                  "Error fetching campaign details:",
+                  campaignErr.message
+                );
+              }
+            }
+
+            // FIXED: Find admin using crm_user_id from token
+            // const admin = await userModel.findById(
+            //   new mongoose.Types.ObjectId(tokenData.crm_user_id)
+            // );
+
+            // if (!admin) {
+            //   console.error(
+            //     `Admin not found for crm_user_id: ${tokenData.crm_user_id}`
+            //   );
+            //   continue;
+            // }
+
+            // console.log("✓ Admin found:", admin.email);
+
+            // // Find which Admin owns this page (from user collection)
+            // const admin = await userModel.findOne({
+            //   "facebookPages.pageId": pageId,
+            // });
+
+            // console.log("admin:", admin);
+
+            // if (!admin) {
+            //   console.warn(`No admin found for pageId: ${pageId}`);
+            //   continue;
+            // }
+
+            // Extract these fields (name, email, phone, etc.)
+            const name =
+              lead.field_data.find((f) => f.name === "full_name")?.values[0] ||
+              null;
+            const email =
+              lead.field_data.find((f) => f.name === "email")?.values[0] ||
+              null;
+            const phone =
+              lead.field_data.find((f) => f.name === "phone_number")
+                ?.values[0] || null;
+
+            // When webhook receives a lead with page_id, find the Admin who owns that page and assign lead:
+            await MetaLeadsModel.create({
+              leadgen_id,
+              form_id,
+              page_id: pageId,
+              campaign_name: campaignName,
+              field_data: lead.field_data,
+              name,
+              email,
+              phone,
+              adminId: admin._id,
+              user_email: tokenData.user_email, // Store user email
+              assignedTo: null,
+              assignedDate: null,
+              status: "new",
+              tags: [],
+              remarks1: "",
+              remarks2: "",
+            });
+
+            console.log(`New lead saved for user: ${admin.email}`);
+          } catch (err) {
+            console.error("Error fetching lead data:", err.message);
+            console.error("Fetch error details:", err.response?.data);
+          }
         }
       }
+      // Respond to Facebook that webhook was received successfully
+      return res.status(200).send("EVENT_RECEIVED");
+    } else {
+      console.log("Invalid webhook object type");
+
+      // If event is not from a "page", return 404
+      return res.sendStatus(404);
     }
-    // Respond to Facebook that webhook was received successfully
-    return res.status(200).send("EVENT_RECEIVED");
-  } else {
-    // If event is not from a "page", return 404
-    return res.sendStatus(404);
+  } catch (error) {
+    console.error("Webhook processing error:", error);
+    return res.status(500).send("Webhook processing failed");
   }
 };
 
 // get leads from DB that comes from meta APIs
+// export const getAllLeadsForAuthorizeAdmin = async (req, res) => {
+//   try {
+//     let query = {};
+
+//     if (req.user.role === "admin") {
+//       // Admin sees only his own leads
+//       query.adminId = new mongoose.Types.ObjectId(req.user._id);
+//     } else if (req.user.role === "user") {
+//       // User sees all leads created by their Admin
+//       query.adminId = new mongoose.Types.ObjectId(req.user.adminId);
+
+//       // uncomment later when assignedTo is ObjectId
+//       // query.assignedTo = req.user._id;
+//     }
+
+//     const leads = await MetaLeadsModel.find(query).sort({ createdAt: -1 });
+
+//     return res.status(200).json({
+//       message: "Leads fetched successfully",
+//       totalLeads: leads.length,
+//       leads,
+//     });
+//   } catch (err) {
+//     console.error("Error fetching leads:", err);
+//     res
+//       .status(500)
+//       .json({ error: "Failed to fetch leads", details: err.message });
+//   }
+// };
+
 export const getAllLeadsForAuthorizeAdmin = async (req, res) => {
   try {
+    // Safety check
+    if (!req.user) {
+      return res
+        .status(401)
+        .json({ error: "Unauthorized: No user info found" });
+    }
+
     let query = {};
 
     if (req.user.role === "admin") {
@@ -168,13 +260,18 @@ export const getAllLeadsForAuthorizeAdmin = async (req, res) => {
       query.adminId = new mongoose.Types.ObjectId(req.user._id);
     } else if (req.user.role === "user") {
       // User sees all leads created by their Admin
+      if (!req.user.adminId) {
+        return res.status(400).json({ error: "User has no adminId assigned" });
+      }
       query.adminId = new mongoose.Types.ObjectId(req.user.adminId);
 
-      // uncomment later when assignedTo is ObjectId
+      // later when assignedTo is ObjectId
       // query.assignedTo = req.user._id;
+    } else {
+      return res.status(403).json({ error: "Invalid role" });
     }
 
-    const leads = await MetaLeadsModel.find(query);
+    const leads = await MetaLeadsModel.find(query).sort({ createdAt: -1 });
 
     return res.status(200).json({
       message: "Leads fetched successfully",
@@ -182,6 +279,7 @@ export const getAllLeadsForAuthorizeAdmin = async (req, res) => {
       leads,
     });
   } catch (err) {
+    console.error("Error fetching leads:", err);
     res
       .status(500)
       .json({ error: "Failed to fetch leads", details: err.message });
@@ -223,11 +321,35 @@ export const updateLeadsComesFromMeta = async (req, res) => {
       modifiedCount: result.modifiedCount,
     });
   } catch (err) {
+    console.error("Error updating leads:", err);
     res
       .status(500)
       .json({ error: "Failed to update leads", details: err.message });
   }
 };
+
+// Add to webhookRoutes.js
+// router.get("/lead-status", async (req, res) => {
+//   try {
+//     const tokens = await TokenModel.find({});
+//     const leads = await MetaLeadsModel.find().sort({ _id: -1 }).limit(5);
+
+//     res.json({
+//       tokens: tokens.map((t) => ({
+//         page_name: t.page_name,
+//         page_id: t.page_id,
+//         user_email: t.user_email,
+//         created: t.token_created_at,
+//       })),
+//       recent_leads: leads,
+//       total_leads: await MetaLeadsModel.countDocuments(),
+//       webhook_url: "https://dbbackend.devnexussolutions.com/webhook",
+//       status: "active",
+//     });
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// });
 
 // Get Facebook connection status for authenticated user
 // router.get("/user/facebook-status", Authenticate, async (req, res) => {

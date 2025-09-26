@@ -9,12 +9,18 @@ const client = new OAuth2Client(CLIENT_ID);
 
 export const googleLoginRoute = async (req, res) => {
   try {
-    const { token } = req.body; // access_token from frontend
+    const { token } = req.body; // JWT credential from frontend
+
     if (!token) return res.status(400).send("Missing token");
 
-    // Verify token with Google
-    const ticket = await client.getTokenInfo(token);
-    const { email, name, sub: googleId } = ticket;
+    // Verify token
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    const { email, name, sub: googleId } = payload;
 
     // Save or update user
     const user = await userModel.findOneAndUpdate(
@@ -26,9 +32,7 @@ export const googleLoginRoute = async (req, res) => {
           password: "google_oauth_dummy",
           role: "admin",
         },
-        $set: {
-          googleId,
-        },
+        $set: { googleId },
       },
       { upsert: true, new: true }
     );
@@ -46,6 +50,46 @@ export const googleLoginRoute = async (req, res) => {
     res.status(500).send("Authentication failed");
   }
 };
+
+// export const googleLoginRoute = async (req, res) => {
+//   try {
+//     const { token } = req.body; // access_token from frontend
+//     if (!token) return res.status(400).send("Missing token");
+
+//     // Verify token with Google
+//     const ticket = await client.getTokenInfo(token);
+//     const { email, name, sub: googleId } = ticket;
+
+//     // Save or update user
+//     const user = await userModel.findOneAndUpdate(
+//       { email },
+//       {
+//         $setOnInsert: {
+//           name,
+//           EmpUsername: email.split("@")[0],
+//           password: "google_oauth_dummy",
+//           role: "admin",
+//         },
+//         $set: {
+//           googleId,
+//         },
+//       },
+//       { upsert: true, new: true }
+//     );
+
+//     // Issue your JWT
+//     const jwtToken = jwt.sign(
+//       { id: user._id, email: user.email },
+//       process.env.JWT_SECRET,
+//       { expiresIn: "1h" }
+//     );
+
+//     res.json({ user: { name: user.name, email: user.email }, token: jwtToken });
+//   } catch (err) {
+//     console.error("Google login error:", err);
+//     res.status(500).send("Authentication failed");
+//   }
+// };
 
 // export const googleLoginRoute = (req, res) => {
 //   const adminId = req.user._id.toString(); // or however you store Admin login info
@@ -72,11 +116,11 @@ export const googleCallback = async (req, res) => {
     const adminId = state;
 
     // Exchange code for tokens
-    const { tokens } = await oAuth2Client.getToken(code);
-    oAuth2Client.setCredentials(tokens);
+    const { tokens } = await OAuth2Client.getToken(code);
+    OAuth2Client.setCredentials(tokens);
 
     // Get Google user profile
-    const oauth2 = google.oauth2({ auth: oAuth2Client, version: "v2" });
+    const oauth2 = google.oauth2({ auth: OAuth2Client, version: "v2" });
     const { data } = await oauth2.userinfo.get();
 
     // Save or update user

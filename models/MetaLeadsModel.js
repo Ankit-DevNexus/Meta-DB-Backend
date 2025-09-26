@@ -7,7 +7,6 @@ const leadSchema = new mongoose.Schema(
     form_id: String,
     page_id: String,
     campaign_name: String,
-    field_data: Array,
     name: String,
     email: String,
     phone: String,
@@ -19,6 +18,7 @@ const leadSchema = new mongoose.Schema(
     tags: [String],
     remarks1: String,
     remarks2: String,
+    field_data: Array,
   },
   {
     timestamps: true,
