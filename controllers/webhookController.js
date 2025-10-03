@@ -98,13 +98,13 @@ export const webhookLeadsRecevieFromFacebook = async (req, res) => {
             const leadRes = await axios.get(
               `https://graph.facebook.com/v19.0/${leadgen_id}?fields=ad_id,form_id,field_data,created_time&access_token=${tokenData.page_access_token}`
             );
-            console.log("leadRes:", leadRes);
+            // console.log("leadRes:", leadRes);
 
             const lead = leadRes.data;
-            console.log(
-              "Lead fetched from Facebook:",
-              JSON.stringify(lead, null, 2)
-            );
+            // console.log(
+            //   "Lead fetched from Facebook:",
+            //   JSON.stringify(lead, null, 2)
+            // );
 
             let campaignName = null;
 
@@ -116,7 +116,7 @@ export const webhookLeadsRecevieFromFacebook = async (req, res) => {
                 const adDetails = await axios.get(
                   `https://graph.facebook.com/v19.0/${lead.ad_id}?fields=campaign_id&access_token=${tokenData.page_access_token}`
                 );
-                console.log("adDetails:", adDetails);
+                // console.log("adDetails:", adDetails);
 
                 const campaignId = adDetails.data.campaign_id;
 
