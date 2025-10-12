@@ -58,15 +58,15 @@ export const webhookLeadsRecevieFromFacebook = async (req, res) => {
 
           // Find stored token for this page (from when admin connected FB page)
           const tokenData = await TokenModel.findOne({ page_id: pageId });
-          console.log("tokenData", tokenData);
+          // console.log("tokenData", tokenData);
 
           if (!tokenData) {
             console.error("Token not found for page:", pageId);
             continue;
           }
 
-          console.log("✓ Token found for page:", tokenData.page_name);
-          console.log("Token user email:", tokenData.user_email);
+          // console.log("✓ Token found for page:", tokenData.page_name);
+          // console.log("Token user email:", tokenData.user_email);
 
           // Check if lead already exists (avoid duplicates)
           const existingLead = await MetaLeadsModel.findOne({ leadgen_id });
@@ -91,7 +91,7 @@ export const webhookLeadsRecevieFromFacebook = async (req, res) => {
           // show which URL we’re calling
           const url = `https://graph.facebook.com/v19.0/${leadgen_id}?access_token=${tokenData.page_access_token}`;
 
-          console.log("Fetching lead from:", url);
+          // console.log("Fetching lead from:", url);
 
           try {
             // Fetch lead details from Facebook API
@@ -111,7 +111,7 @@ export const webhookLeadsRecevieFromFacebook = async (req, res) => {
             // Try to fetch campaign name (if ad_id exists)
             if (lead.ad_id) {
               try {
-                console.log(`Fetching ad details for ad_id: ${lead.ad_id}`);
+                // console.log(`Fetching ad details for ad_id: ${lead.ad_id}`);
 
                 const adDetails = await axios.get(
                   `https://graph.facebook.com/v19.0/${lead.ad_id}?fields=campaign_id&access_token=${tokenData.page_access_token}`
@@ -167,7 +167,6 @@ export const webhookLeadsRecevieFromFacebook = async (req, res) => {
               remarks1: "",
               remarks2: "",
             });
-
             console.log(`New lead saved for user: ${admin.email}`);
           } catch (err) {
             console.error("Error fetching lead data:", err.message);
@@ -188,37 +187,6 @@ export const webhookLeadsRecevieFromFacebook = async (req, res) => {
     return res.status(500).send("Webhook processing failed");
   }
 };
-
-// get leads from DB that comes from meta APIs
-// export const getAllLeadsForAuthorizeAdmin = async (req, res) => {
-//   try {
-//     let query = {};
-
-//     if (req.user.role === "admin") {
-//       // Admin sees only his own leads
-//       query.adminId = new mongoose.Types.ObjectId(req.user._id);
-//     } else if (req.user.role === "user") {
-//       // User sees all leads created by their Admin
-//       query.adminId = new mongoose.Types.ObjectId(req.user.adminId);
-
-//       // uncomment later when assignedTo is ObjectId
-//       // query.assignedTo = req.user._id;
-//     }
-
-//     const leads = await MetaLeadsModel.find(query).sort({ createdAt: -1 });
-
-//     return res.status(200).json({
-//       message: "Leads fetched successfully",
-//       totalLeads: leads.length,
-//       leads,
-//     });
-//   } catch (err) {
-//     console.error("Error fetching leads:", err);
-//     res
-//       .status(500)
-//       .json({ error: "Failed to fetch leads", details: err.message });
-//   }
-// };
 
 export const getAllLeadsForAuthorizeAdmin = async (req, res) => {
   try {
