@@ -2,10 +2,12 @@ import { google } from "googleapis";
 import userModel from "../models/user.model.js";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
+// controllers/googleAuthController.js
+import fetch from "node-fetch";
 
 const { OAuth2 } = google.auth;
 
-// 1️⃣ Generate Google Auth URL (frontend will redirect user here)
+//  Generate Google Auth URL (frontend will redirect user here)
 export const getGoogleAuthURL = async (req, res) => {
   try {
     const oAuth2Client = new OAuth2(
@@ -22,7 +24,8 @@ export const getGoogleAuthURL = async (req, res) => {
       scope: [
         "profile",
         "email",
-        "https://www.googleapis.com/auth/calendar.readonly",
+        "https://www.googleapis.com/auth/calendar",
+        "https://www.googleapis.com/auth/calendar.events",
       ],
       state,
     });
@@ -34,7 +37,7 @@ export const getGoogleAuthURL = async (req, res) => {
   }
 };
 
-// 2️⃣ Google OAuth callback (Google redirects here after login)
+//  Google OAuth callback (Google redirects here after login)
 export const googleCallback = async (req, res) => {
   try {
     const { code, state } = req.query;
@@ -106,7 +109,7 @@ export const googleCallback = async (req, res) => {
   }
 };
 
-// 3️⃣ Get Google Calendar Events (for logged-in users)
+// Get Google Calendar Events (for logged-in users)
 export const getCalendarEvents = async (req, res) => {
   try {
     const userId = req.user?.id; // from JWT middleware
@@ -141,6 +144,50 @@ export const getCalendarEvents = async (req, res) => {
   } catch (err) {
     console.error("Error fetching calendar events:", err);
     res.status(500).json({ message: "Failed to fetch calendar events" });
+  }
+};
+
+export const googleAuth = async (req, res) => {
+  try {
+    const { token } = req.body;
+
+    if (!token) {
+      return res.status(400).json({ message: "No token provided" });
+    }
+
+    // Verify the token with Google
+    const response = await fetch(
+      "https://www.googleapis.com/oauth2/v3/userinfo",
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+
+    const data = await response.json();
+
+    if (data.error) {
+      return res
+        .status(400)
+        .json({ message: "Invalid Google token", error: data.error });
+    }
+
+    // Example: log or store user info
+    console.log("✅ Google User Info:", data);
+
+    // You could save this user to DB here if needed
+
+    res.status(200).json({
+      success: true,
+      message: "Google token verified successfully",
+      user: data,
+    });
+  } catch (error) {
+    console.error("❌ Error verifying Google token:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to verify Google token",
+      error: error.message,
+    });
   }
 };
 

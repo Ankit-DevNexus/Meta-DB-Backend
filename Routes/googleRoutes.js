@@ -2,6 +2,7 @@ import express from "express";
 import {
   getCalendarEvents,
   getGoogleAuthURL,
+  googleAuth,
   googleCallback,
 } from "../controllers/OAuthGoogleController.js";
 import { Authenticate } from "../middleware/authMiddleware.js";
@@ -16,7 +17,8 @@ const router = express.Router();
 // OAuth callback
 // router.get("/auth/google", Authenticate, googleLoginRoute);
 // router.get("/auth/google/callback", googleCallback);
-
+// POST route to verify Google token
+router.post("/auth", googleAuth);
 router.get("/api/google/auth", getGoogleAuthURL);
 router.get("/google/callback", googleCallback);
 router.get("/google/calendar", Authenticate, getCalendarEvents);
