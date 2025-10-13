@@ -58,8 +58,17 @@ const userSchema = new mongoose.Schema(
       scope: String,
       token_type: String,
       expiry_date: Number,
+      // Optional: add below for Ads-specific tracking
+      customerId: String, // Google Ads customer ID
+      developerToken: String, // Your Google Ads developer token
     },
-
+    googleAdsAccounts: [
+      {
+        accountId: String,
+        accountName: String,
+        customerId: String,
+      },
+    ],
     resetPasswordToken: String,
     resetPasswordExpires: Date,
   },
