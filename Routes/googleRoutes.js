@@ -1,28 +1,36 @@
 import express from "express";
 import {
+  getCalendarEvents,
+  getGoogleAuthURL,
+  googleAuth,
   googleCallback,
-  googleLoginRoute,
 } from "../controllers/OAuthGoogleController.js";
 import { Authenticate } from "../middleware/authMiddleware.js";
-import {
-  fetchGoogleAdsData,
-  listCampaignMetrics,
-  listLeadForms,
-} from "../controllers/googleLeadController.js";
+// import {
+//   fetchGoogleAdsData,
+//   listCampaignMetrics,
+//   listLeadForms,
+// } from "../controllers/googleLeadController.js";
 
 const router = express.Router();
 
 // OAuth callback
-router.post("/auth/google", Authenticate, googleLoginRoute);
-router.get("/auth/google/callback", googleCallback);
+// router.get("/auth/google", Authenticate, googleLoginRoute);
+// router.get("/auth/google/callback", googleCallback);
+// POST route to verify Google token
+
+router.post("/api/google/auth", googleAuth);
+router.get("/api/google/auth", getGoogleAuthURL);
+router.get("/google/callback", googleCallback);
+router.get("/google/calendar", Authenticate, getCalendarEvents);
 
 // This route triggers fetching & saving Google Ads data
-router.get("/fetch", Authenticate, fetchGoogleAdsData);
+// router.get("/fetch", Authenticate, fetchGoogleAdsData);
 
-// List campaigns metrics from DB
-router.get("/google/ads/metrics/list", Authenticate, listCampaignMetrics);
+// // List campaigns metrics from DB
+// router.get("/google/ads/metrics/list", Authenticate, listCampaignMetrics);
 
-// List all lead from DB
-router.get("/google/ads/lead/list", Authenticate, listLeadForms);
+// // List all lead from DB
+// router.get("/google/ads/lead/list", Authenticate, listLeadForms);
 
 export default router;
