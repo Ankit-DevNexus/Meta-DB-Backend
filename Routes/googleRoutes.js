@@ -18,10 +18,12 @@ const router = express.Router();
 // router.get("/auth/google", Authenticate, googleLoginRoute);
 // router.get("/auth/google/callback", googleCallback);
 // POST route to verify Google token
-router.post("/auth", googleAuth);
+
+router.post("/api/google/auth", googleAuth);
 router.get("/api/google/auth", getGoogleAuthURL);
 router.get("/google/callback", googleCallback);
 router.get("/google/calendar", Authenticate, getCalendarEvents);
+
 // This route triggers fetching & saving Google Ads data
 // router.get("/fetch", Authenticate, fetchGoogleAdsData);
 

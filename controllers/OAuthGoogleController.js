@@ -3,7 +3,6 @@ import userModel from "../models/user.model.js";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 // controllers/googleAuthController.js
-import fetch from "node-fetch";
 
 const { OAuth2 } = google.auth;
 
@@ -149,48 +148,119 @@ export const getCalendarEvents = async (req, res) => {
 
 export const googleAuth = async (req, res) => {
   try {
-    const { token } = req.body;
+    const { code, adminId } = req.body; // receive authorization code from frontend
+    if (!code) return res.status(400).json({ message: "No code provided" });
 
-    if (!token) {
-      return res.status(400).json({ message: "No token provided" });
-    }
-
-    // Verify the token with Google
-    const response = await fetch(
-      "https://www.googleapis.com/oauth2/v3/userinfo",
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
+    const oAuth2Client = new OAuth2(
+      process.env.GOOGLE_CLIENT_ID,
+      process.env.GOOGLE_CLIENT_SECRET,
+      process.env.GOOGLE_REDIRECT_URI
     );
 
-    const data = await response.json();
+    // Exchange code for tokens
+    const { tokens } = await oAuth2Client.getToken(code);
+    oAuth2Client.setCredentials(tokens);
 
-    if (data.error) {
-      return res
-        .status(400)
-        .json({ message: "Invalid Google token", error: data.error });
+    // Get user profile from Google
+    const oauth2 = google.oauth2({ auth: oAuth2Client, version: "v2" });
+    const { data } = await oauth2.userinfo.get();
+
+    // Convert adminId to ObjectId if provided
+    let adminObjectId = undefined;
+    if (adminId) {
+      try {
+        adminObjectId = new mongoose.Types.ObjectId(adminId);
+      } catch (err) {
+        console.warn("Invalid adminId:", adminId);
+      }
     }
 
-    // Example: log or store user info
-    console.log("✅ Google User Info:", data);
+    // Store or update user
+    const user = await userModel.findOneAndUpdate(
+      { email: data.email },
+      {
+        $setOnInsert: {
+          name: data.name,
+          EmpUsername: data.email.split("@")[0],
+          password: "google_oauth_dummy",
+          role: "admin",
+        },
+        $set: {
+          googleId: data.id,
+          adminId: adminObjectId,
+          googleTokens: {
+            access_token: tokens.access_token,
+            refresh_token: tokens.refresh_token,
+            scope: tokens.scope,
+            token_type: tokens.token_type,
+            expiry_date: tokens.expiry_date,
+          },
+        },
+      },
+      { upsert: true, new: true }
+    );
 
-    // You could save this user to DB here if needed
+    // Generate JWT for frontend
+    const jwtToken = jwt.sign(
+      { id: user._id, email: user.email, adminId: user.adminId },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
 
-    res.status(200).json({
-      success: true,
-      message: "Google token verified successfully",
-      user: data,
-    });
-  } catch (error) {
-    console.error("❌ Error verifying Google token:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to verify Google token",
-      error: error.message,
-    });
+    res.status(200).json({ success: true, user, token: jwtToken });
+  } catch (err) {
+    console.error("Google auth error:", err);
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to login", error: err.message });
   }
 };
 
+// export const googleAuth = async (req, res) => {
+//   try {
+//     const { token } = req.body;
+
+//     if (!token) {
+//       return res.status(400).json({ message: "No token provided" });
+//     }
+
+//     // Verify the token with Google
+//     const response = await fetch(
+//       "https://www.googleapis.com/oauth2/v3/userinfo",
+//       {
+//         headers: { Authorization: `Bearer ${token}` },
+//       }
+//     );
+
+//     const data = await response.json();
+
+//     if (data.error) {
+//       return res
+//         .status(400)
+//         .json({ message: "Invalid Google token", error: data.error });
+//     }
+
+//     // Example: log or store user info
+//     console.log("Google User Info:", data);
+
+//     // You could save this user to DB here if needed
+
+//     res.status(200).json({
+//       success: true,
+//       message: "Google token verified successfully",
+//       user: data,
+//     });
+//   } catch (error) {
+//     console.error("Error verifying Google token:", error);
+//     res.status(500).json({
+//       success: false,
+//       message: "Failed to verify Google token",
+//       error: error.message,
+//     });
+//   }
+// };
+
+// -------------------------------------------------------------------------------------------------------------------
 // import { google } from "googleapis";
 // import userModel from "../models/user.model.js";
 // import { OAuth2Client } from "google-auth-library";
